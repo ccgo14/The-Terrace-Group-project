@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { mockCategories, mockArticles } from '../data/mockData';
-import MatchPredictor from './MatchPredictor';
-import CommentSection from './CommentSection';
+import { useState } from 'react'
+import { mockCategories, mockArticles } from '../data/mockData'
+import MatchPredictor from './MatchPredictor'
+import CommentSection from './CommentSection'
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState(mockCategories[0].id);
+  const [activeCategory, setActiveCategory] = useState(mockCategories[0].id)
 
-  const filteredArticles = mockArticles.filter((a) => a.category_id === activeCategory);
+  const filteredArticles = mockArticles.filter((a) => a.category_id === activeCategory)
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex justify-center">
@@ -49,5 +49,5 @@ export default function Home() {
         </main>
       </div>
     </div>
-  );
+  )
 }
