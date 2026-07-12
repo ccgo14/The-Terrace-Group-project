@@ -30,13 +30,18 @@ export default function MatchPredictor({ articleId }) {
   }
 
   return (
+
     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-sm mb-4">
-      <h3 className="text-sm font-bold text-slate-700 tracking-wide mb-1">
-        Submit Prediction
-      </h3>
-      <p className="text-xs text-slate-400 mb-3">
-        Community Consensus: {communityPercentage}%
-      </p>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold text-slate-700 tracking-wide">
+          Submit Prediction
+        </h3>
+
+
+        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100">
+          {communityPercentage}% consensus
+        </span>
+      </div>
 
       <form onSubmit={submitPrediction} className="space-y-3">
         <div className="flex gap-2 items-center">
@@ -47,7 +52,7 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setHomeScore(e.target.value);
             }}
-            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-center focus:outline-none focus:border-blue-500"
+            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder:text-slate-300"
             required
           />
           <span className="text-slate-400 font-bold">-</span>
@@ -58,7 +63,7 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setAwayScore(e.target.value);
             }}
-            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-center focus:outline-none focus:border-blue-500"
+            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder:text-slate-300"
             required
           />
         </div>
@@ -68,7 +73,8 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setReaction_type(e.target.value);
           }}
-          className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500">
+          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none"
+        >
           <option value="Home Win">Home Win</option>
           <option value="Away Win">Away Win</option>
           <option value="Draw">Draw</option>
@@ -80,14 +86,16 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setBody(e.target.value);
           }}
-          className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-700 h-16 resize-none focus:outline-none focus:border-blue-500"
+          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-700 h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder:text-slate-400"
           required
         />
 
+        
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-medium text-xs py-2 rounded-lg transition-all duration-200 hover:bg-blue-700 shadow-sm active:scale-95">
-          Lock Prediction
+          className="w-full bg-slate-900 text-white rounded-xl py-3 font-semibold hover:bg-black transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
+        >
+          Submit Prediction
         </button>
       </form>
     </div>
