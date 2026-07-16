@@ -1,10 +1,11 @@
 import { useState } from "react";
 import CreateAccount from "./components/CreateAccount";
-import UserProfile from "./components/UserProfile";
 import LogInPage from "./components/LoginPage";
+import Home from "./components/Home";
 
-export default function App (){
+export default function App() {
    const [activeUser, setActiveUser] = useState(null);
+   const [isLogin, setIsLogin] = useState(false);
 
    const handleAccountCreated = (accountData) => {
       setActiveUser(accountData);
@@ -12,17 +13,20 @@ export default function App (){
 
     return(
         <div className="bg-[#1e140f] min-h-screen">
-             {!activeUser ? (
-            <CreateAccount onAccountCreated={handleAccountCreated} />
-            ) : (
-            /*  Once created, swap to the profile page and pass the data down */
-            <UserProfile userData={activeUser} />
-            )}
+           {!activeUser ? (
 
-            <LogInPage />
-         </div>
-     )
+              isLogin ? (
+                 <LogInPage onNavigateToRegister={() => setIsLogin(false)} />
+              ) : (
+                 <CreateAccount
+                    onAccountCreated={handleAccountCreated}
+
+                 />
+              )
+           ) : (
+              
+              <Home userData={activeUser} />
+           )}
+        </div>
+    )
 }
-
-
-           
