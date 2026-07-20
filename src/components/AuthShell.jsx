@@ -4,7 +4,7 @@ export function AuthShell({ heading, sub, children, footer }) {
   return (
     <Screen scroll={false}>
       <div className="min-h-screen flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md bg-floodlight dark:bg-night-pitch rounded-cardLg border border-terracing/40 dark:border-terracing/30 overflow-hidden">
+        <div className="w-full max-w-md bg-floodlight dark:bg-night-pitch rounded-cardLg border border-black/10 dark:border-white/10 overflow-hidden">
           <div className="flex flex-col h-full px-6 py-8">
             {/* wordmark + faint terracing texture header block */}
             <div className="relative -mx-6 -mt-8 h-40 bg-night-pitch overflow-hidden flex items-end">
@@ -22,13 +22,13 @@ export function AuthShell({ heading, sub, children, footer }) {
               </div>
             </div>
 
-            <p className="mt-5 text-sm leading-relaxed text-terracing text-pretty">
+            <p className="mt-5 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 text-pretty">
               {sub}
             </p>
 
             <div className="mt-6 flex flex-col gap-4">{children}</div>
 
-            <div className="mt-auto pb-8 pt-6 text-center font-mono text-xs text-terracing">
+            <div className="mt-auto pb-8 pt-6 text-center font-mono text-xs text-neutral-500 dark:text-neutral-400">
               {footer}
             </div>
           </div>

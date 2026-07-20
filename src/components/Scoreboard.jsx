@@ -2,20 +2,27 @@ import { LivePip } from "./UI";
 
 // Signature element: faint terracing-step texture behind the live scoreboard.
 export function Scoreboard({ match }) {
+  const safeMatch = match || {
+    home: { name: "TBD", score: 0 },
+    away: { name: "TBD", score: 0 },
+    status: "SCHEDULED",
+    minute: "",
+  };
+
   return (
-    <div className="relative overflow-hidden rounded-cardLg border border-terracing/40 bg-night-pitch text-floodlight">
+    <div className="relative overflow-hidden rounded-cardLg border border-black/10 dark:border-white/10 bg-night-pitch text-floodlight">
       <div className="absolute inset-0 bg-terracing-steps pointer-events-none" aria-hidden="true" />
       <div className="relative p-5">
         <div className="flex items-center justify-between">
           <LivePip />
           <span className="font-mono text-xs tracking-[0.1em] text-amber-live">
-            {match.status} {match.minute}
+            {safeMatch.status} {safeMatch.minute}
           </span>
         </div>
 
-        <Row name={match.home.name} score={match.home.score} />
+        <Row name={safeMatch.home.name} score={safeMatch.home.score} />
         <div className="my-4 h-px bg-terracing/40" />
-        <Row name={match.away.name} score={match.away.score} />
+        <Row name={safeMatch.away.name} score={safeMatch.away.score} />
       </div>
     </div>
   );
@@ -24,7 +31,7 @@ export function Scoreboard({ match }) {
 function Row({ name, score }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="font-display font-bold uppercase leading-none text-3xl max-w-[70%] text-balance">
+      <span className="font-display font-bold uppercase leading-none text-3xl max-w-[70%] text-balance min-w-0 flex-1 truncate">
         {name}
       </span>
       <span className="font-mono font-bold text-5xl tabular-nums leading-none">
@@ -39,7 +46,7 @@ export function LeagueTable({ rows }) {
   return (
     <table className="w-full border-collapse font-mono text-xs">
       <thead>
-        <tr className="text-left text-night-pitch dark:text-floodlight">
+        <tr className="text-left text-neutral-600 dark:text-neutral-400 font-mono">
           <Th>Rank</Th>
           <Th>Team</Th>
           <Th className="text-right">Played</Th>
@@ -49,14 +56,12 @@ export function LeagueTable({ rows }) {
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.rank} className="text-terracing">
+          <tr key={r.rank} className="text-night-pitch dark:text-floodlight font-mono">
             <Td>{r.rank}</Td>
-            <Td className="text-night-pitch dark:text-floodlight">{r.team}</Td>
+            <Td>{r.team}</Td>
             <Td className="text-right">{r.played}</Td>
             <Td className="text-right">{r.gd}</Td>
-            <Td className="text-right text-night-pitch dark:text-floodlight">
-              {r.points}
-            </Td>
+            <Td className="text-right">{r.points}</Td>
           </tr>
         ))}
       </tbody>
@@ -66,14 +71,14 @@ export function LeagueTable({ rows }) {
 
 function Th({ children, className = "" }) {
   return (
-    <th className={`border border-terracing/40 px-2 py-1.5 font-medium ${className}`}>
+    <th className={`border border-black/10 dark:border-white/10 px-2 py-1.5 font-medium ${className}`}>
       {children}
     </th>
   );
 }
 function Td({ children, className = "" }) {
   return (
-    <td className={`border border-terracing/40 px-2 py-1.5 ${className}`}>
+    <td className={`border border-black/10 dark:border-white/10 px-2 py-1.5 ${className}`}>
       {children}
     </td>
   );

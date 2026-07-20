@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { currentUser } from "../data/mockData";
+import { currentUser } from "../data";
 
 export default function MatchPredictor({ articleId }) {
   const [homeScore, setHomeScore] = useState("");
@@ -11,7 +11,7 @@ export default function MatchPredictor({ articleId }) {
 
   function submitPrediction(e) {
     e.preventDefault();
-    if (currentUser.permissions !== "read-write") {
+    if (!currentUser?.permissions?.includes("read-write")) {
       return alert("Read-only access");
     }
 
@@ -30,7 +30,7 @@ export default function MatchPredictor({ articleId }) {
   }
 
   return (
-    <div className="bg-floodlight dark:bg-night-pitch border border-terracing/40 rounded-cardLg p-4">
+    <div className="bg-white/80 dark:bg-terracing/40 border border-black/10 dark:border-white/10 rounded-cardLg p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-display font-bold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
           Submit Prediction
@@ -49,10 +49,10 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setHomeScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-terracing/50 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-night-pitch dark:focus:border-floodlight transition-colors duration-100 placeholder:text-terracing/70"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
             required
           />
-          <span className="text-terracing font-mono font-bold">-</span>
+          <span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold">-</span>
           <input
             type="number"
             placeholder="Away"
@@ -60,7 +60,7 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setAwayScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-terracing/50 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-night-pitch dark:focus:border-floodlight transition-colors duration-100 placeholder:text-terracing/70"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
             required
           />
         </div>
@@ -70,7 +70,7 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setReaction_type(e.target.value);
           }}
-          className="w-full bg-transparent border border-terracing/50 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-night-pitch dark:focus:border-floodlight transition-colors duration-100 appearance-none">
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 appearance-none">
           <option value="Home Win">Home Win</option>
           <option value="Away Win">Away Win</option>
           <option value="Draw">Draw</option>
@@ -82,13 +82,13 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setBody(e.target.value);
           }}
-          className="w-full bg-transparent border border-terracing/50 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-night-pitch dark:focus:border-floodlight transition-colors duration-100 placeholder:text-terracing/70"
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
           required
         />
 
         <button
           type="submit"
-          className="w-full bg-night-pitch text-floodlight border border-night-pitch rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:bg-floodlight hover:text-night-pitch dark:bg-floodlight dark:text-night-pitch dark:border-floodlight dark:hover:bg-night-pitch dark:hover:text-floodlight transition-colors duration-100 active:translate-y-[2px]">
+          className="w-full bg-black text-white border-black rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:opacity-90 dark:bg-white dark:text-black dark:border-white transition-colors duration-100 active:translate-y-[2px]">
           Submit Prediction
         </button>
       </form>

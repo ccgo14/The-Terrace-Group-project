@@ -12,7 +12,7 @@ export default function BottomNav({ active }) {
   return (
     <>
       {/* Mobile bottom navigation */}
-      <nav className="lg:hidden sticky bottom-0 z-10 bg-floodlight/95 dark:bg-night-pitch/95 border-t border-terracing/30">
+      <nav className="lg:hidden sticky bottom-0 z-10 bg-floodlight/95 dark:bg-night-pitch/95 border-t border-black/10 dark:border-white/10">
         <div className="flex items-stretch justify-around">
           {items.map(({ key, label, to, Icon }) => {
             const isActive = key === active;
@@ -24,7 +24,7 @@ export default function BottomNav({ active }) {
                   "flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors duration-100 " +
                   (isActive
                     ? "text-night-pitch dark:text-floodlight"
-                    : "text-terracing hover:text-night-pitch dark:hover:text-floodlight")
+                    : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white")
                 }>
                 <Icon className="w-6 h-6" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.08em]">
@@ -37,7 +37,7 @@ export default function BottomNav({ active }) {
       </nav>
 
       {/* Desktop sidebar navigation */}
-      <nav className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-floodlight dark:bg-night-pitch border-r border-terracing/30 flex-col py-6 px-4">
+      <nav className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-floodlight dark:bg-night-pitch border-r border-black/10 dark:border-white/10 flex-col py-6 px-4">
         <div className="mb-8">
           <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-live">
             The Terrace
@@ -54,7 +54,7 @@ export default function BottomNav({ active }) {
                   "flex items-center gap-3 px-4 py-3 rounded-card transition-colors duration-100 " +
                   (isActive
                     ? "bg-night-pitch text-floodlight dark:bg-floodlight dark:text-night-pitch"
-                    : "text-terracing hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch")
+                    : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white")
                 }>
                 <Icon className="w-5 h-5" />
                 <span className="font-display font-semibold uppercase tracking-wide text-sm">
