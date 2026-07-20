@@ -2,9 +2,32 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   darkMode: "class",
-  // No theme/extend needed here anymore, all tokens are in index.css
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        floodlight: "#F4F5F1",
+        "night-pitch": "#12171D",
+        terracing: "#8B8E8C",
+        "amber-live": "#FFB100",
+        "pitch-green": "#3C5A41",
+      },
+      fontFamily: {
+        display: ["Barlow Condensed", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
+      },
+      borderRadius: {
+        card: "12px",
+        cardLg: "16px",
+      },
+      boxShadow: {
+        none: "none",
+      },
+      backgroundImage: {
+        "terracing-steps":
+          "repeating-linear-gradient(0deg, transparent 0px, transparent 6px, rgba(244,245,241,0.05) 6px, rgba(244,245,241,0.05) 7px)",
+      },
+    },
   },
   plugins: [],
 };

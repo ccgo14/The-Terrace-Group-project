@@ -2,11 +2,11 @@
 
 @theme {
   /* Colors - The Locked Tokens */
-  --color-floodlight: #F4F5F1;
-  --color-night-pitch: #12171D;
-  --color-terracing: #8B8E8C;
-  --color-amber-live: #FFB100;
-  --color-pitch-green: #3C5A41;
+  --color-floodlight: #f4f5f1;
+  --color-night-pitch: #12171d;
+  --color-terracing: #8b8e8c;
+  --color-amber-live: #ffb100;
+  --color-pitch-green: #3c5a41;
 
   /* Font Families */
   --font-display: "Barlow Condensed", sans-serif;
@@ -24,5 +24,10 @@
 }
 
 /* Utilities */
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
