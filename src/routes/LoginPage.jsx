@@ -1,35 +1,50 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthShell } from "../components/AuthShell";
 import { Field, Button } from "../components/UI";
 
-export default function Login() {
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem("isAuthenticated", "true");
+    navigate("/profile/1");
+  };
+
   return (
     <AuthShell
-      heading="Welcome Back"
-      sub="Sign in to join the conversation, upvote the hot takes and keep score."
+      heading="Sign In"
+      sub="Enter the terrace. Access predictions, reactions, and live match banter."
       footer={
-        <span>
-          New here?{" "}
-          <Link
-            to="/signup"
-            className="text-night-pitch dark:text-floodlight underline underline-offset-2"
-          >
-            Create an account
-          </Link>
-        </span>
+        <Link
+          to="/signup"
+          className="text-night-pitch dark:text-floodlight underline underline-offset-2"
+        >
+          Create an account
+        </Link>
       }
     >
-      <Field label="Email" type="email" placeholder="you@theterrace.fc" />
-      <Field label="Password" type="password" placeholder="••••••••" />
-      <div className="flex justify-end -mt-1">
-        <Link
-          to="/reset-password"
-          className="font-mono text-[11px] uppercase tracking-[0.08em] text-terracing hover:text-night-pitch dark:hover:text-floodlight"
-        >
-          Forgot password?
-        </Link>
-      </div>
-      <Button>Sign In</Button>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Field
+          label="Email"
+          type="email"
+          placeholder="you@theterrace.fc"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          required
+        />
+        <Field
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          required
+        />
+        <Button type="submit">Sign In</Button>
+      </form>
     </AuthShell>
   );
 }

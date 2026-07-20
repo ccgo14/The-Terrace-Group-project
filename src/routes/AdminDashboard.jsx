@@ -30,20 +30,20 @@ export default function Admin() {
 
       <main className="pb-8">
         {/* metrics grid */}
-        <div className="mx-4 mt-5 grid grid-cols-2 border border-terracing/40">
+        <div className="mx-4 mt-5 grid grid-cols-2 border border-black/10 dark:border-white/10">
           {metrics.map(([label, value], i) => (
             <div
               key={label}
               className={
                 "p-4 " +
-                (i % 2 === 0 ? "border-r border-terracing/40 " : "") +
-                (i < 2 ? "border-b border-terracing/40" : "")
+                (i % 2 === 0 ? "border-r border-black/10 dark:border-white/10 " : "") +
+                (i < 2 ? "border-b border-black/10 dark:border-white/10" : "")
               }
             >
               <div className="font-mono font-bold text-3xl text-night-pitch dark:text-floodlight tabular-nums leading-none">
                 {value}
               </div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-terracing mt-1.5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-500 dark:text-neutral-400 mt-1.5">
                 {label}
               </div>
             </div>
@@ -54,33 +54,33 @@ export default function Admin() {
           Moderation Queue
         </h2>
 
-        <ul className="border-t border-terracing/30">
+        <ul className="border-t border-black/10 dark:border-white/10">
           {queue.map((a) => (
             <li
               key={a.id}
-              className="px-4 py-4 border-b border-terracing/30 flex items-start gap-3"
+              className="px-4 py-4 border-b border-black/10 dark:border-white/10 flex items-start gap-3"
             >
               <div className="flex-1 min-w-0">
                 <KindLabel>{a.kind}</KindLabel>
                 <p className="mt-2 font-display font-semibold uppercase leading-tight text-night-pitch dark:text-floodlight truncate">
                   {a.title}
                 </p>
-                <p className="font-mono text-[11px] text-terracing mt-1">
+                <p className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
                   {a.author} · {a.time} ago
                 </p>
               </div>
               <div className="flex flex-col gap-2 shrink-0">
                 <button
                   aria-label="Approve"
-                  className="p-2 border border-terracing/50 rounded-card text-night-pitch dark:text-floodlight
+                  className="p-2 border border-black/10 dark:border-white/10 rounded-card text-night-pitch dark:text-floodlight
                   hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch
                   transition-colors duration-100 active:translate-y-[2px]"
                 >
                   <IconCheck className="w-4 h-4" />
                 </button>
                 <button
-                  className="px-2 py-1 border border-terracing/50 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-terracing
-                  hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch
+                  className="px-2 py-1 border border-black/10 dark:border-white/10 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-500 dark:text-neutral-400
+                  hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black
                   transition-colors duration-100 active:translate-y-[2px]"
                 >
                   Reject

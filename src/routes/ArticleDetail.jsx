@@ -27,7 +27,7 @@ export default function ArticleDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
           <article className="lg:col-span-2">
-            <div className="w-full h-64 overflow-hidden bg-terracing/20 dark:bg-black/30">
+              <div className="w-full h-64 overflow-hidden bg-terracing/20 dark:bg-terracing/40">
               <img
                 src={article.image || "/placeholder.svg"}
                 alt={article.title}
@@ -40,7 +40,7 @@ export default function ArticleDetail() {
               <h1 className="mt-3 font-display font-bold uppercase leading-none text-4xl text-night-pitch dark:text-floodlight text-balance">
                 {article.title}
               </h1>
-              <p className="mt-3 font-mono text-xs text-terracing">
+              <p className="mt-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
                 By {article.author} · {article.time} ago
               </p>
             </div>
@@ -55,8 +55,8 @@ export default function ArticleDetail() {
               {liveMatch.events.map((e, i) => (
                 <li
                   key={i}
-                  className="flex gap-4 py-2.5 border-b border-terracing/30 first:border-t">
-                  <span className="font-mono text-sm text-terracing w-8 shrink-0">
+                  className="flex gap-4 py-2.5 border-b border-black/10 dark:border-white/10 first:border-t">
+                  <span className="font-mono text-sm text-neutral-500 dark:text-neutral-400 w-8 shrink-0">
                     {e.min}
                   </span>
                   <span className="text-sm text-night-pitch dark:text-floodlight">
@@ -85,30 +85,30 @@ export default function ArticleDetail() {
             </div>
 
             {/* Reactions section — UGC, illustrated tone */}
-            <section className="mt-8 border-t border-terracing/30 pt-5">
+            <section className="mt-8 border-t border-black/10 dark:border-white/10 pt-5">
               <h2 className="font-display font-bold uppercase text-lg tracking-wide text-night-pitch dark:text-floodlight">
                 Fan Reactions
               </h2>
               <ul className="mt-3">
                 {reactions.map((r, i) => (
-                  <li key={i} className="py-4 border-b border-terracing/30">
+                  <li key={i} className="py-4 border-b border-black/10 dark:border-white/10">
                     <div className="flex items-center gap-2">
                       <img
                         src="/images/avatar.png"
                         alt=""
                         className="w-7 h-7 rounded-full object-cover bg-terracing/30"
                       />
-                      <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
-                        {r.author}
-                      </span>
-                      <span className="font-mono text-[11px] text-terracing">
+                       <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight min-w-0 truncate">
+                         {r.author}
+                       </span>
+                      <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
                         {r.time}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight">
+                    <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
                       {r.body}
                     </p>
-                    <button className="mt-2 flex items-center gap-1.5 text-terracing hover:text-amber-live transition-colors duration-100 active:translate-y-[2px]">
+                    <button className="mt-2 flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-amber-live transition-colors duration-100 active:translate-y-[2px]">
                       <IconUpvote className="w-4 h-4" />
                       <span className="font-mono text-xs">{r.upvotes}</span>
                     </button>

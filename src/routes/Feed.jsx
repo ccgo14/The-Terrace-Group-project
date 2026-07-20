@@ -10,19 +10,19 @@ export default function Feed() {
   const personalized = [...articles].sort((a, b) => b.upvotes - a.upvotes);
 
   return (
-    <Screen>
+    <Screen sidebar>
       <Header title="Your Feed" />
 
       {/* filter chips — hover inverts, no rounded-full pills */}
-      <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-terracing/30">
+      <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-black/10 dark:border-white/10">
         {filters.map((f, i) => (
           <button
             key={f}
             className={
               "shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] px-3 py-1.5 rounded-card border transition-colors duration-100 active:translate-y-[2px] " +
               (i === 0
-                ? "bg-night-pitch text-floodlight border-night-pitch dark:bg-floodlight dark:text-night-pitch dark:border-floodlight"
-                : "border-terracing/50 text-terracing hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch")
+                ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                : "bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white border-black/10 dark:border-white/10")
             }>
             {f}
           </button>

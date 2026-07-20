@@ -1,20 +1,58 @@
+import { useState, useMemo } from "react";
 import { Screen, Header } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
 import { LeagueTable } from "../components/Scoreboard";
-import { articles, table } from "../data";
+import { articles, categories, table } from "../data";
 
 export default function HomeFeed() {
+  const [activeCategory, setActiveCategory] = useState("ALL");
+  const categoryNames = useMemo(
+    () => ["ALL", ...categories.map((c) => c.name)],
+    []
+  );
+
+  const filtered = useMemo(() => {
+    if (activeCategory === "ALL") return articles;
+    return articles.filter((a) => a.category === activeCategory || a.kind === activeCategory);
+  }, [activeCategory]);
+
   return (
-    <Screen>
+    <Screen sidebar>
       <Header title="The Terrace" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {articles.map((a) => (
-            <ArticleCard key={a.id} article={a} />
-          ))}
+        <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-3 border-b border-black/10 dark:border-white/10 mb-6">
+          {categoryNames.map((name) => {
+            const isActive = activeCategory === name;
+            return (
+              <button
+                key={name}
+                onClick={() => setActiveCategory(name)}
+                className={
+                  "shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] px-3 py-1.5 rounded-card border transition-colors duration-100 active:translate-y-[2px] " +
+                  (isActive
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "border-black/10 dark:border-white/10 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white")
+                }
+              >
+                {name}
+              </button>
+            );
+          })}
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-12 text-center font-mono text-sm text-neutral-500 dark:text-neutral-400 border border-black/10 dark:border-white/10 rounded-card">
+            No articles match this filter.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            {filtered.map((a) => (
+              <ArticleCard key={a.id} article={a} />
+            ))}
+          </div>
+        )}
 
         <section className="py-6">
           <h2 className="font-display font-bold uppercase text-lg tracking-wide text-night-pitch dark:text-floodlight mb-3">

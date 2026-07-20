@@ -22,7 +22,7 @@ export default function PostArticle() {
 
       <form className="px-4 py-5 flex flex-col gap-5">
         <div>
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing mb-2">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-2">
             Post Type
           </span>
           <div className="flex gap-3">
@@ -33,8 +33,8 @@ export default function PostArticle() {
                 className={
                   "flex-1 font-display font-semibold uppercase tracking-wide text-sm px-3 py-2.5 rounded-card border transition-colors duration-100 active:translate-y-[2px] " +
                   (i === 0
-                    ? "bg-night-pitch text-floodlight border-night-pitch dark:bg-floodlight dark:text-night-pitch dark:border-floodlight"
-                    : "border-terracing/50 text-terracing hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch")
+                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                    : "bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white border-black/10 dark:border-white/10")
                 }
               >
                 {k}
@@ -47,25 +47,25 @@ export default function PostArticle() {
 
         {/* cover upload — dashed frame, no shadow */}
         <div>
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing mb-2">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-2">
             Cover Image
           </span>
-          <div className="border border-dashed border-terracing/60 rounded-card h-32 flex items-center justify-center text-center px-4">
-            <span className="font-mono text-xs text-terracing">
+          <div className="border border-dashed border-black/10 dark:border-white/10 rounded-card h-32 flex items-center justify-center text-center px-4">
+            <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
               Tap to upload — photography for reports, illustration for takes
             </span>
           </div>
         </div>
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
             Body
           </span>
           <textarea
             rows={7}
             placeholder="Set the scene from the terrace…"
-            className="w-full bg-transparent border border-terracing/50 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight
-            placeholder:text-terracing/70 focus:outline-none focus:border-night-pitch dark:focus:border-floodlight resize-none"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight
+            placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
           />
         </label>
 
