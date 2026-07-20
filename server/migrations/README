@@ -1,1 +1,90 @@
-Single-database configuration for Flask.
+# Database Schema Documentation
+
+This document describes the exact database schema implemented in the application models (`models.py`) and SQLite database (`app.db`).
+
+---
+
+## 1. Tables & Fields
+
+### `users`
+Stores user account details, credentials, and profile information.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | Integer | Primary Key, Auto-increment | Unique identifier for each user |
+| `first_name` | String(20) | NOT NULL | User's first name |
+| `last_name` | String(20) | NOT NULL | User's last name |
+| `username` | String(50) | NOT NULL, UNIQUE | Unique account handle |
+| `email` | String(100) | NOT NULL, UNIQUE | User email address |
+| `password` | String(50) | NOT NULL | Account password |
+| `gender` | String(10) | NOT NULL | User gender |
+| `profile_pic` | String(200) | NULLABLE | URL path to profile picture |
+| `bio` | String(400) | NOT NULL | Short author biography |
+| `role` | String(10) | NOT NULL | Role designation (e.g., admin, user) |
+| `created_at` | DateTime | Default: `utcnow` | Timestamp of account creation |
+| `updated_at` | DateTime | Default: `utcnow` | Timestamp of last profile update |
+
+---
+
+### `categories`
+Taxonomic structure used to organize articles.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `category_id` | Integer | Primary Key, Auto-increment | Unique identifier for each category |
+| `category_name` | String(100) | NOT NULL, UNIQUE | Name of the category |
+| `icon` | String(20) | NOT NULL | Icon identifier or string code |
+| `description` | String(500) | NOT NULL | Detailed category description |
+| `created_at` | DateTime | Default: `utcnow` | Creation timestamp |
+
+---
+
+### `articles`
+Stores content created and published by users.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `article_id` | Integer | Primary Key, Auto-increment | Unique identifier for each article |
+| `title` | String(100) | NOT NULL, UNIQUE | Unique article headline |
+| `content` | String(2000) | NOT NULL | Main body text |
+| `cover_image` | String(100) | NULLABLE | URL or path to cover image |
+| `view_count` | Integer | NULLABLE | Total page views |
+| `likes_count` | Integer | NULLABLE | Total likes received |
+| `author_id` | Integer | Foreign Key (`users.user_id`), NOT NULL | References article author |
+| `category_id` | Integer | Foreign Key (`categories.category_id`), NOT NULL | References category |
+| `published_at` | DateTime | Default: `now` | Publication date and time |
+| `created_at` | DateTime | Default: `utcnow` | Creation timestamp |
+| `updated_at` | DateTime | Default: `utcnow` | Timestamp of last edit |
+
+---
+
+### `reactions`
+Tracks user interaction and comments on articles.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `reaction_id` | Integer | Primary Key, Auto-increment | Unique reaction identifier |
+| `body` | String(1000) | NULLABLE | Text content or comment |
+| `reaction_type` | String(100) | NULLABLE | Type of reaction (e.g., like, comment) |
+| `user_id` | Integer | Foreign Key (`users.user_id`), NOT NULL | User who performed reaction |
+| `article_id` | Integer | NULLABLE | Target article ID |
+| `created_at` | DateTime | Default: `utcnow` | Timestamp of reaction |
+
+---
+
+### `follow`
+Junction table managing category subscriptions by users.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | Integer | Composite Primary Key, Foreign Key (`users.user_id`) | Subscribed user |
+| `category_id` | Integer | Composite Primary Key, Foreign Key (`categories.category_id`) | Subscribed category |
+
+---
+
+## 2. Relationships Summary
+
+* **Users -> Articles**: One-to-Many (`users.user_id` $\rightarrow$ `articles.author_id`)[cite: 11, 13].
+* **Categories -> Articles**: One-to-Many (`categories.category_id` $\rightarrow$ `articles.category_id`)[cite: 11, 13].
+* **Users -> Reactions**: One-to-Many (`users.user_id` $\rightarrow$ `reactions.user_id`)[cite: 11, 13].
+* **Users <-> Categories (`follow`)**: Many-to-Many relationship allowing users to follow multiple categories[cite: 11, 13].
