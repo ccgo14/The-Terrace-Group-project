@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./routes/LoginPage";
 import CreateAccount from "./routes/CreateAccount";
@@ -22,8 +23,17 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   return (
-    <div className="w-full min-h-screen bg-floodlight dark:bg-night-pitch text-slate-900 dark:text-stone-100 font-body transition-colors duration-200 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight font-body transition-colors duration-200 overflow-x-hidden">
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
