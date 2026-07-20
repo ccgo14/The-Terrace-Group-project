@@ -5,9 +5,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        floodlight: "#F4F5F1",
-        "night-pitch": "#12171D",
-        terracing: "#8B8E8C",
+        floodlight: "#f4f4f0",
+        "night-pitch": "#0d0f12",
+        terracing: "#1a1d24",
         "amber-live": "#FFB100",
         "pitch-green": "#3C5A41",
       },

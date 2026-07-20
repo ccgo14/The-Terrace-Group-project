@@ -1,10 +1,11 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* Colors - The Locked Tokens */
-  --color-floodlight: #f4f5f1;
-  --color-night-pitch: #12171d;
-  --color-terracing: #8b8e8c;
+  --color-floodlight: #f4f4f0;
+  --color-night-pitch: #0d0f12;
+  --color-terracing: #1a1d24;
   --color-amber-live: #ffb100;
   --color-pitch-green: #3c5a41;
 
@@ -16,10 +17,7 @@
 
 @layer base {
   body {
-    @apply bg-floodlight text-[#12171D];
-  }
-  .dark body {
-    @apply bg-night-pitch text-[#F4F5F1];
+    @apply bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight transition-colors duration-200;
   }
 }
 
