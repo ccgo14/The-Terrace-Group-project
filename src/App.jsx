@@ -1,10 +1,11 @@
 import { useState } from "react";
 import CreateAccount from "./components/CreateAccount";
-import UserProfile from "./components/UserProfile";
 import LogInPage from "./components/LoginPage";
+import Home from "./components/Home";
 
-export default function App (){
+export default function App() {
    const [activeUser, setActiveUser] = useState(null);
+   const [isLogin, setIsLogin] = useState(false);
 
    const handleAccountCreated = (accountData) => {
       setActiveUser(accountData);
@@ -19,10 +20,18 @@ export default function App (){
             <UserProfile userData={activeUser} />
             )}http://localhost:5173/
 
-            <LogInPage />
-         </div>
-     )
+              isLogin ? (
+                 <LogInPage onNavigateToRegister={() => setIsLogin(false)} />
+              ) : (
+                 <CreateAccount
+                    onAccountCreated={handleAccountCreated}
+
+                 />
+              )
+           ) : (
+              
+              <Home userData={activeUser} />
+           )}
+        </div>
+    )
 }
-
-
-           
