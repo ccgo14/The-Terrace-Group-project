@@ -13,7 +13,12 @@ export default function App() {
 
     return(
         <div className="bg-[#1e140f] min-h-screen">
-           {!activeUser ? (
+             {!activeUser ? (
+            <CreateAccount onAccountCreated={handleAccountCreated} />
+            ) : (
+            /*  Once created, swap to the profile page and pass the data down */
+            <UserProfile userData={activeUser} />
+            )}http://localhost:5173/
 
               isLogin ? (
                  <LogInPage onNavigateToRegister={() => setIsLogin(false)} />
