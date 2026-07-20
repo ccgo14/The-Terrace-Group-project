@@ -1,27 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+@theme {
+  /* Colors - The Locked Tokens */
+  --color-floodlight: #F4F5F1;
+  --color-night-pitch: #12171D;
+  --color-terracing: #8B8E8C;
+  --color-amber-live: #FFB100;
+  --color-pitch-green: #3C5A41;
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"] {
-  -moz-appearance: textfield;
+  /* Font Families */
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
-
-body {
-  background-color: #f8fafc; 
+@layer base {
+  body {
+    @apply bg-floodlight text-[#12171D];
+  }
+  .dark body {
+    @apply bg-night-pitch text-[#F4F5F1];
+  }
 }
+
+/* Utilities */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
