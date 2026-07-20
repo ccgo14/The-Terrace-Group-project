@@ -67,6 +67,8 @@ class Reaction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Follow(db.Model):
+    __tablename__ = 'follow'
+
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"), primary_key=True)
 
