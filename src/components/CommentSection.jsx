@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { mockReactions, mockUsers } from "../data/mockData";
+import { users, reactions } from "../data";
 
 export default function CommentSection({ articleId }) {
   const [reactionsList, setReactionsList] = useState(
-    mockReactions.filter(function (r) {
+    (reactions || []).filter(function (r) {
       return r.article_id === articleId;
     }),
   );
@@ -14,7 +14,7 @@ export default function CommentSection({ articleId }) {
 
   function resolveUser(userId) {
     return (
-      mockUsers.find(function (u) {
+      users.find(function (u) {
         return u.id === userId;
       }) || {}
     );
@@ -42,9 +42,8 @@ export default function CommentSection({ articleId }) {
 
   return (
     <div className="relative">
-      
       <div className="max-h-96 overflow-y-auto p-5 space-y-4">
-        <h4 className="text-xs font-bold text-slate-400 tracking-widest uppercase">
+        <h4 className="font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-600 dark:text-neutral-400">
           Community Stances
         </h4>
 
@@ -52,34 +51,29 @@ export default function CommentSection({ articleId }) {
           {reactionsList.map(function (reaction) {
             const author = resolveUser(reaction.user_id);
             return (
-
               <div
                 key={reaction.id}
-                className="flex gap-3 items-start bg-slate-50 p-3 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors duration-200"
-              >
-
+                className="flex gap-3 items-start bg-white/80 dark:bg-terracing/40 p-3 rounded-card border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-100">
                 <img
-                  src={author.avatar}
-                  alt={author.name}
-                  className="w-8 h-8 rounded-full bg-slate-200 border border-slate-200 flex-shrink-0"
+                  src={author?.avatar || users?.[0]?.avatar || "/images/default-avatar.png"}
+                  alt={author?.name || "Anonymous"}
+                  className="w-8 h-8 rounded-full bg-neutral-500/10 dark:bg-neutral-400/10 border border-black/10 dark:border-white/10 flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline">
                     <div className="flex items-center gap-2">
-
-                      <span className="text-xs font-bold text-slate-700">
-                        {author.name}
+                      <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
+                        {author?.name || "Anonymous"}
                       </span>
-
-                      <span className="text-[10px] text-slate-400">
+                      <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
                         5 Minutes Ago
                       </span>
                     </div>
-                    <span className="text-[10px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded uppercase">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-600 dark:text-neutral-400 border border-black/10 dark:border-white/10 px-1.5 py-0.5 rounded-card">
                       {reaction.reaction_type || "prediction"}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 mt-1">
                     {reaction.details || reaction.body}
                   </p>
                 </div>
@@ -89,44 +83,56 @@ export default function CommentSection({ articleId }) {
         </div>
 
         {/* Upvote / Downvote actions */}
-        <div className="flex gap-4 items-center pt-2 text-xs text-slate-500">
+        <div className="flex gap-4 items-center pt-2 text-xs text-neutral-500 dark:text-neutral-400">
           <button
             onClick={function () {
               setUpvotes(upvotes + 1);
             }}
-            className="flex items-center gap-1 hover:text-blue-600 transition-colors duration-150"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors duration-100">
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 15l7-7 7 7"
+              />
             </svg>
-            Upvote <span>{upvotes}</span>
+            Upvote <span className="font-mono">{upvotes}</span>
           </button>
           <button
             onClick={function () {
               setDownvotes(downvotes + 1);
             }}
-            className="flex items-center gap-1 hover:text-red-500 transition-colors duration-150"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors duration-100">
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
-            Downvote <span>{downvotes}</span>
+            Downvote <span className="font-mono">{downvotes}</span>
           </button>
         </div>
       </div>
 
-
       <form
         onSubmit={onAddComment}
-        className="sticky bottom-0 bg-white/90 backdrop-blur border-t border-slate-200 p-3 flex gap-2 items-center"
-      >
-        <img
-          src={mockUsers[0].avatar}
-          alt="You"
-          className="w-8 h-8 rounded-full border border-slate-200 flex-shrink-0"
-        />
-
-
+        className="sticky bottom-0 bg-floodlight/95 dark:bg-night-pitch/95 border-t border-black/10 dark:border-white/10 p-3 flex gap-2 items-center">
+          <img
+            src={users?.[0]?.avatar || "/images/default-avatar.png"}
+            alt="You"
+            className="w-8 h-8 rounded-full border border-black/10 dark:border-white/10 flex-shrink-0"
+          />
         <input
           type="text"
           placeholder="Type Something..."
@@ -134,21 +140,27 @@ export default function CommentSection({ articleId }) {
           onChange={function (e) {
             setNewCommentText(e.target.value);
           }}
-          className="flex-1 px-4 py-2.5 text-sm text-slate-900 bg-slate-100 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white focus:border-blue-500 transition-all duration-200 placeholder:text-slate-400"
+          className="flex-1 px-4 py-2.5 text-sm text-night-pitch dark:text-floodlight bg-transparent border border-black/10 dark:border-white/10 rounded-card focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
         />
-
-
         <button
           type="submit"
           disabled={!newCommentText.trim()}
-          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+          className={`w-10 h-10 rounded-card flex items-center justify-center transition-colors duration-100 flex-shrink-0 ${
             newCommentText.trim()
-              ? "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed"
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              ? "bg-night-pitch text-floodlight border border-night-pitch hover:bg-floodlight hover:text-night-pitch dark:bg-floodlight dark:text-night-pitch dark:border-floodlight dark:hover:bg-night-pitch dark:hover:text-floodlight"
+              : "bg-transparent text-neutral-500 dark:text-neutral-400 border border-black/10 dark:border-white/10 cursor-not-allowed"
+          }`}>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+            />
           </svg>
         </button>
       </form>
