@@ -83,13 +83,13 @@ export default function Profile() {
             <h2 className="font-display font-bold uppercase text-2xl leading-none text-night-pitch dark:text-floodlight truncate">
               {userData.name}
             </h2>
-            <p className="font-mono text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate">
+            <p className="font-mono text-xs text-terracing/60 dark:text-floodlight/50 mt-1 truncate">
               {userData.handle || userData.username}
             </p>
           </div>
         </div>
 
-        <p className="px-4 mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 text-pretty">
+        <p className="px-4 mt-3 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80 text-pretty">
           {userData.bio}
         </p>
 
@@ -108,7 +108,7 @@ export default function Profile() {
               <div className="font-mono font-bold text-xl text-night-pitch dark:text-floodlight tabular-nums">
                 {value}
               </div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-terracing/60 dark:text-floodlight/50 mt-0.5">
                 {label}
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function Profile() {
                   className={
                     "w-10 h-5 rounded-full border border-black/10 dark:border-white/10 transition-colors duration-200 " +
                     (settings[key]
-                      ? "bg-amber-live border-amber-live"
+                      ? "bg-terracing border-terracing"
                       : "bg-transparent")
                   }>
                   <span

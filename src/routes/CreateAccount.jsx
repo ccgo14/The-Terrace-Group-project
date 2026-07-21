@@ -85,7 +85,7 @@ export default function CreateAccount() {
         />
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Role
           </span>
           <select
@@ -111,7 +111,7 @@ export default function CreateAccount() {
         />
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Password
           </span>
           <div className="relative">
@@ -121,12 +121,12 @@ export default function CreateAccount() {
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
               required
-              className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
+              className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -134,7 +134,7 @@ export default function CreateAccount() {
         </label>
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             {bioMeta.label}
           </span>
           <textarea
@@ -142,12 +142,12 @@ export default function CreateAccount() {
             value={form.bio}
             onChange={(e) => update("bio", e.target.value)}
             rows={3}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
           />
         </label>
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Avatar
           </span>
           <div
@@ -161,7 +161,7 @@ export default function CreateAccount() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="font-mono text-xs text-terracing/60 dark:text-floodlight/50">
                 Click to upload image
               </span>
             )}

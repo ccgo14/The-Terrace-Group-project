@@ -13,7 +13,7 @@ export function AuthShell({ heading, sub, children, footer }) {
                 aria-hidden="true"
               />
               <div className="relative px-6 pb-5">
-                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-live">
+                 <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-terracing dark:text-floodlight">
                   The Terrace
                 </span>
                 <h1 className="mt-1 font-display font-bold uppercase leading-none text-4xl text-floodlight text-balance">
@@ -22,13 +22,13 @@ export function AuthShell({ heading, sub, children, footer }) {
               </div>
             </div>
 
-            <p className="mt-5 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 text-pretty">
+            <p className="mt-5 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80 text-pretty">
               {sub}
             </p>
 
             <div className="mt-6 flex flex-col gap-4">{children}</div>
 
-            <div className="mt-auto pb-8 pt-6 text-center font-mono text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="mt-auto pb-8 pt-6 text-center font-mono text-xs text-terracing/60 dark:text-floodlight/50">
               {footer}
             </div>
           </div>

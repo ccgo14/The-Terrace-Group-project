@@ -29,7 +29,7 @@ export default function Categories() {
                 <span className="font-display font-semibold uppercase tracking-wide text-lg min-w-0 truncate">
                   {c.name}
                 </span>
-                <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                <span className="font-mono text-xs text-terracing/60 dark:text-floodlight/50">
                   {c.count} posts
                 </span>
               </Link>
@@ -47,7 +47,7 @@ export default function Categories() {
                 <Link
                   to={`/articles/${a.id}`}
                   className="flex gap-3 items-start border border-black/10 dark:border-white/10 bg-white/80 dark:bg-terracing/40 rounded-card p-3">
-                  <span className="font-mono font-bold text-2xl text-neutral-500 dark:text-neutral-400 tabular-nums leading-none">
+                  <span className="font-mono font-bold text-2xl text-terracing/60 dark:text-floodlight/50 tabular-nums leading-none">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="min-w-0">

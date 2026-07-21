@@ -28,7 +28,7 @@ export default function Admin() {
         }
       />
 
-      <main className="pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {/* metrics grid */}
         <div className="mx-4 mt-5 grid grid-cols-2 border border-black/10 dark:border-white/10">
           {metrics.map(([label, value], i) => (
@@ -43,7 +43,7 @@ export default function Admin() {
               <div className="font-mono font-bold text-3xl text-night-pitch dark:text-floodlight tabular-nums leading-none">
                 {value}
               </div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-500 dark:text-neutral-400 mt-1.5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-terracing/60 dark:text-floodlight/50 mt-1.5">
                 {label}
               </div>
             </div>
@@ -65,7 +65,7 @@ export default function Admin() {
                 <p className="mt-2 font-display font-semibold uppercase leading-tight text-night-pitch dark:text-floodlight truncate">
                   {a.title}
                 </p>
-                <p className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                <p className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50 mt-1">
                   {a.author} · {a.time} ago
                 </p>
               </div>
@@ -79,7 +79,7 @@ export default function Admin() {
                   <IconCheck className="w-4 h-4" />
                 </button>
                 <button
-                  className="px-2 py-1 border border-black/10 dark:border-white/10 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-500 dark:text-neutral-400
+                  className="px-2 py-1 border border-black/10 dark:border-white/10 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50
                   hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black
                   transition-colors duration-100 active:translate-y-[2px]"
                 >

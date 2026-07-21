@@ -65,7 +65,7 @@ export default function BottomNav({ active }) {
                   "flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors duration-100 " +
                   (isActive
                     ? "text-night-pitch dark:text-floodlight"
-                    : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white")
+                    : "text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white")
                 }>
                 <Icon className="w-6 h-6" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.08em]">
@@ -95,7 +95,7 @@ export default function BottomNav({ active }) {
                   "flex items-center gap-3 px-4 py-3 rounded-card transition-colors duration-100 " +
                   (isActive
                     ? "bg-night-pitch text-floodlight dark:bg-floodlight dark:text-night-pitch"
-                    : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white")
+                    : "text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white")
                 }>
                 <Icon className="w-5 h-5" />
                 <span className="font-display font-semibold uppercase tracking-wide text-sm">

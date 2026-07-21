@@ -33,7 +33,7 @@ export default function ArticleCard({ article }) {
         <h2 className="mt-3 font-display font-bold uppercase leading-none text-2xl text-night-pitch dark:text-floodlight text-balance line-clamp-2">
           {title}
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 text-pretty flex-grow line-clamp-2">
+        <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80 text-pretty flex-grow line-clamp-2">
           {excerpt}
         </p>
         <div className="mt-4">

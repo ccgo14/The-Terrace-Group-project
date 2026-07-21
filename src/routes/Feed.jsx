@@ -22,7 +22,7 @@ export default function Feed() {
               "shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] px-3 py-1.5 rounded-card border transition-colors duration-100 active:translate-y-[2px] " +
               (i === 0
                 ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
-                : "bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white border-black/10 dark:border-white/10")
+                : "bg-transparent text-terracing/70 dark:text-floodlight/50 hover:text-black dark:hover:text-white border-black/10 dark:border-white/10")
             }>
             {f}
           </button>

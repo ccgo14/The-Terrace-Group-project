@@ -40,7 +40,7 @@ export default function ArticleDetail() {
               <h1 className="mt-3 font-display font-bold uppercase leading-none text-4xl text-night-pitch dark:text-floodlight text-balance">
                 {article.title}
               </h1>
-              <p className="mt-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-3 font-mono text-xs text-terracing/60 dark:text-floodlight/50">
                 By {article.author} · {article.time} ago
               </p>
             </div>
@@ -56,7 +56,7 @@ export default function ArticleDetail() {
                 <li
                   key={i}
                   className="flex gap-4 py-2.5 border-b border-black/10 dark:border-white/10 first:border-t">
-                  <span className="font-mono text-sm text-neutral-500 dark:text-neutral-400 w-8 shrink-0">
+                  <span className="font-mono text-sm text-terracing/60 dark:text-floodlight/50 w-8 shrink-0">
                     {e.min}
                   </span>
                   <span className="text-sm text-night-pitch dark:text-floodlight">
@@ -101,14 +101,14 @@ export default function ArticleDetail() {
                        <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight min-w-0 truncate">
                          {r.author}
                        </span>
-                      <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
                         {r.time}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                    <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80">
                       {r.body}
                     </p>
-                    <button className="mt-2 flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-amber-live transition-colors duration-100 active:translate-y-[2px]">
+                    <button className="mt-2 flex items-center gap-1.5 text-terracing/60 dark:text-floodlight/50 hover:text-terracing dark:hover:text-floodlight transition-colors duration-100 active:translate-y-[2px]">
                       <IconUpvote className="w-4 h-4" />
                       <span className="font-mono text-xs">{r.upvotes}</span>
                     </button>

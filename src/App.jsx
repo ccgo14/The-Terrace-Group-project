@@ -35,7 +35,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight font-body transition-colors duration-200 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight font-body overflow-x-hidden">
       <BrowserRouter>
         <Routes>
           {/* Public routes */}

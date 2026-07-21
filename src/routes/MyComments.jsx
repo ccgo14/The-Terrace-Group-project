@@ -15,9 +15,9 @@ export default function MyComments() {
     <Screen sidebar nav>
       <Header title="My Comments" />
 
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-24 lg:pb-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-0 lg:pb-0">
         {myReactions.length === 0 ? (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-12">
+          <p className="text-sm text-terracing/60 dark:text-floodlight/50 text-center py-12">
             You haven't posted a reaction yet.
           </p>
         ) : (
@@ -38,18 +38,18 @@ export default function MyComments() {
                     <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
                       {author.name || "You"}
                     </span>
-                    <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
                       5 Minutes Ago
                     </span>
                   </div>
 
                   {article && (
-                    <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.06em] text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.06em] text-terracing/60 dark:text-floodlight/50">
                       on &ldquo;{article.title}&rdquo;
                     </p>
                   )}
 
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                  <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80">
                     {r.details || r.body}
                   </p>
                 </li>

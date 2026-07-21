@@ -49,10 +49,10 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setHomeScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
             required
           />
-          <span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold">-</span>
+          <span className="text-terracing/60 dark:text-floodlight/50 font-mono font-bold">-</span>
           <input
             type="number"
             placeholder="Away"
@@ -60,7 +60,7 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setAwayScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
             required
           />
         </div>
@@ -82,7 +82,7 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setBody(e.target.value);
           }}
-          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
           required
         />
 

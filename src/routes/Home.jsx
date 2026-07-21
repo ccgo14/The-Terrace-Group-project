@@ -35,7 +35,7 @@ export default function HomeFeed() {
                   "shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] px-3 py-1.5 rounded-card border transition-colors duration-100 active:translate-y-[2px] " +
                   (isActive
                     ? "bg-black text-white dark:bg-white dark:text-black"
-                    : "border-black/10 dark:border-white/10 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white")
+                    : "border-black/10 dark:border-white/10 text-night-pitch dark:text-floodlight/80 hover:text-black dark:hover:text-white")
                 }>
                 {name}
               </button>
@@ -44,7 +44,7 @@ export default function HomeFeed() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="py-12 text-center font-mono text-sm text-neutral-500 dark:text-neutral-400 border border-black/10 dark:border-white/10 rounded-card">
+          <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
             No articles match this filter.
           </div>
         ) : (
