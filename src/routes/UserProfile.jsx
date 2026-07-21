@@ -16,7 +16,7 @@ export default function Profile() {
   const postsCount = userData.stats.posts ?? userData.stats.predictions ?? 0;
   const userPosts = useMemo(
     () => articles.filter((a) => a.kind === "FAN REACTION"),
-    []
+    [],
   );
 
   const updateSetting = (key) => {
@@ -45,15 +45,14 @@ export default function Profile() {
   };
 
   return (
-    <Screen sidebar>
+    <Screen sidebar nav>
       <Header
         title="Profile"
         right={
           <Link
             to="/post-article"
             className="text-night-pitch dark:text-floodlight block"
-            aria-label="Post"
-          >
+            aria-label="Post">
             <IconEdit className="w-6 h-6" />
           </Link>
         }
@@ -69,8 +68,7 @@ export default function Profile() {
             />
             <label
               htmlFor="avatar-upload"
-              className="absolute inset-0 flex items-center justify-center bg-night-pitch/60 dark:bg-night-pitch/70 cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
-            >
+              className="absolute inset-0 flex items-center justify-center bg-night-pitch/60 dark:bg-night-pitch/70 cursor-pointer opacity-0 hover:opacity-100 transition-opacity">
               <IconCamera className="w-5 h-5 text-floodlight" />
             </label>
             <input
@@ -104,9 +102,9 @@ export default function Profile() {
             <div
               key={label}
               className={
-                "py-3 text-center " + (i < 2 ? "border-r border-black/10 dark:border-white/10" : "")
-              }
-            >
+                "py-3 text-center " +
+                (i < 2 ? "border-r border-black/10 dark:border-white/10" : "")
+              }>
               <div className="font-mono font-bold text-xl text-night-pitch dark:text-floodlight tabular-nums">
                 {value}
               </div>
@@ -131,10 +129,7 @@ export default function Profile() {
               ["Dark Mode", "darkMode"],
               ["Notifications", "notifications"],
             ].map(([label, key]) => (
-              <div
-                key={key}
-                className="flex items-center justify-between"
-              >
+              <div key={key} className="flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-[0.08em] text-night-pitch dark:text-floodlight">
                   {label}
                 </span>
@@ -146,8 +141,7 @@ export default function Profile() {
                     (settings[key]
                       ? "bg-amber-live border-amber-live"
                       : "bg-transparent")
-                  }
-                >
+                  }>
                   <span
                     className={
                       "block w-3.5 h-3.5 rounded-full bg-floodlight dark:bg-night-pitch transition-transform duration-200 " +
@@ -168,8 +162,7 @@ export default function Profile() {
             <li key={a.id}>
               <Link
                 to={`/articles/${a.id}`}
-                className="block px-4 py-4 border-b border-black/10 dark:border-white/10"
-              >
+                className="block px-4 py-4 border-b border-black/10 dark:border-white/10">
                 <KindLabel>{a.kind}</KindLabel>
                 <p className="mt-2 font-display font-semibold uppercase leading-tight text-night-pitch dark:text-floodlight">
                   {a.title}

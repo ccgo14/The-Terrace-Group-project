@@ -7,7 +7,7 @@ export default function Categories() {
   const trending = articles.slice(0, 3);
 
   return (
-    <Screen sidebar>
+    <Screen sidebar nav>
       <Header title="Browse" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
@@ -44,9 +44,9 @@ export default function Categories() {
           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {trending.map((a, i) => (
               <li key={a.id}>
-                 <Link
-                   to={`/articles/${a.id}`}
-                   className="flex gap-3 items-start border border-black/10 dark:border-white/10 bg-white/80 dark:bg-terracing/40 rounded-card p-3">
+                <Link
+                  to={`/articles/${a.id}`}
+                  className="flex gap-3 items-start border border-black/10 dark:border-white/10 bg-white/80 dark:bg-terracing/40 rounded-card p-3">
                   <span className="font-mono font-bold text-2xl text-neutral-500 dark:text-neutral-400 tabular-nums leading-none">
                     {String(i + 1).padStart(2, "0")}
                   </span>

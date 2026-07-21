@@ -10,7 +10,7 @@ export default function Feed() {
   const personalized = [...articles].sort((a, b) => b.upvotes - a.upvotes);
 
   return (
-    <Screen sidebar>
+    <Screen sidebar nav>
       <Header title="Your Feed" />
 
       {/* filter chips — hover inverts, no rounded-full pills */}

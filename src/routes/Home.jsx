@@ -9,16 +9,18 @@ export default function HomeFeed() {
   const [activeCategory, setActiveCategory] = useState("ALL");
   const categoryNames = useMemo(
     () => ["ALL", ...categories.map((c) => c.name)],
-    []
+    [],
   );
 
   const filtered = useMemo(() => {
     if (activeCategory === "ALL") return articles;
-    return articles.filter((a) => a.category === activeCategory || a.kind === activeCategory);
+    return articles.filter(
+      (a) => a.category === activeCategory || a.kind === activeCategory,
+    );
   }, [activeCategory]);
 
   return (
-    <Screen sidebar>
+    <Screen sidebar nav>
       <Header title="The Terrace" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
@@ -34,8 +36,7 @@ export default function HomeFeed() {
                   (isActive
                     ? "bg-black text-white dark:bg-white dark:text-black"
                     : "border-black/10 dark:border-white/10 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white")
-                }
-              >
+                }>
                 {name}
               </button>
             );

@@ -18,7 +18,8 @@ export function Screen({
     <div
       className={`w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight ${
         sidebar ? "lg:pl-64" : ""
-      } ${nav ? "pb-20 lg:pb-0" : ""}`}>
+      } ${nav ? "pb-20 lg:pb-0" : ""}`}
+    >
       {children}
     </div>
   );
@@ -41,7 +42,8 @@ export function Header({ title, left, right }) {
               localStorage.setItem("theme", isDark ? "dark" : "light");
             }}
             className="p-2 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
-            aria-label="Toggle Theme">
+            aria-label="Toggle Theme"
+          >
             {document.documentElement.classList.contains("dark") ? (
               <IconSun className="w-5 h-5" />
             ) : (

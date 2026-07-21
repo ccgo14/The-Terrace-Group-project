@@ -1,30 +1,13 @@
 import { Link } from "react-router-dom";
-import {
-  IconHome,
-  IconFeed,
-  IconGrid,
-  IconUser,
-  IconComment,
-  IconBookmark,
-} from "./Icons";
+import { IconHome, IconFeed, IconGrid, IconUser, IconComment, IconBookmark } from "./Icons";
 
 // Mobile bottom bar mirrors the Figma reference exactly: Home / My Comments / Bookmarks / Profile.
 // Feed and Categories aren't dropped from the app — they're just not primary mobile nav items,
 // same tradeoff the Figma reference makes (4 tabs max on a bottom bar).
 const mobileItems = [
   { key: "home", label: "Home", to: "/", Icon: IconHome },
-  {
-    key: "comments",
-    label: "My Comments",
-    to: "/my-comments",
-    Icon: IconComment,
-  },
-  {
-    key: "bookmarks",
-    label: "Bookmarks",
-    to: "/bookmarks",
-    Icon: IconBookmark,
-  },
+  { key: "comments", label: "My Comments", to: "/my-comments", Icon: IconComment },
+  { key: "bookmarks", label: "Bookmarks", to: "/bookmarks", Icon: IconBookmark },
   { key: "profile", label: "Profile", to: "/profile/1", Icon: IconUser },
 ];
 
@@ -33,18 +16,8 @@ const desktopItems = [
   { key: "home", label: "Home", to: "/", Icon: IconHome },
   { key: "feed", label: "Feed", to: "/feed", Icon: IconFeed },
   { key: "categories", label: "Browse", to: "/categories", Icon: IconGrid },
-  {
-    key: "comments",
-    label: "My Comments",
-    to: "/my-comments",
-    Icon: IconComment,
-  },
-  {
-    key: "bookmarks",
-    label: "Bookmarks",
-    to: "/bookmarks",
-    Icon: IconBookmark,
-  },
+  { key: "comments", label: "My Comments", to: "/my-comments", Icon: IconComment },
+  { key: "bookmarks", label: "Bookmarks", to: "/bookmarks", Icon: IconBookmark },
   { key: "profile", label: "Profile", to: "/profile/1", Icon: IconUser },
 ];
 
