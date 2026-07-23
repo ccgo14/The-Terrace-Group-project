@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local analysis bundles
+repomix-output.xml
+codebase_combined.txt
