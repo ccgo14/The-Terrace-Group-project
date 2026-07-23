@@ -11,18 +11,20 @@ const BIO_META = {
   Admin: { label: "Admin Notes", placeholder: "Internal notes (optional)..." },
 };
 
+const INITIAL_FORM = {
+  firstName: "",
+  lastName: "",
+  username: "",
+  role: ROLES[0],
+  email: "",
+  password: "",
+  bio: "",
+  image: "",
+};
+
 export default function CreateAccount() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    role: ROLES[0],
-    email: "",
-    password: "",
-    bio: "",
-    image: "",
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState("");
 
@@ -31,10 +33,20 @@ export default function CreateAccount() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview); // Clean up previous blob URL
       const url = URL.createObjectURL(file);
       update("image", url);
       setAvatarPreview(url);
     }
+  };
+
+  const handleClear = () => {
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview); // Free memory from object URL
+    }
+    setForm(INITIAL_FORM);
+    setAvatarPreview("");
+    setShowPassword(false);
   };
 
   const bioMeta = BIO_META[form.role] || BIO_META.User;
@@ -42,6 +54,10 @@ export default function CreateAccount() {
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem("isAuthenticated", "true");
+    
+    // Clear state before or during navigation
+    handleClear();
+
     navigate("/profile/1");
   };
 
@@ -62,14 +78,14 @@ export default function CreateAccount() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field
             label="First Name"
-            placeholder="Caleb"
+            placeholder="FirstName"
             value={form.firstName}
             onChange={(e) => update("firstName", e.target.value)}
             required
           />
           <Field
             label="Last Name"
-            placeholder="Dev"
+            placeholder="LastName"
             value={form.lastName}
             onChange={(e) => update("lastName", e.target.value)}
             required
@@ -78,7 +94,7 @@ export default function CreateAccount() {
 
         <Field
           label="Username"
-          placeholder="@calebdev"
+          placeholder="@example1"
           value={form.username}
           onChange={(e) => update("username", e.target.value)}
           required
@@ -104,7 +120,7 @@ export default function CreateAccount() {
         <Field
           label="Email"
           type="email"
-          placeholder="you@theterrace.fc"
+          placeholder=""
           value={form.email}
           onChange={(e) => update("email", e.target.value)}
           required
@@ -117,7 +133,7 @@ export default function CreateAccount() {
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
+              placeholder=""
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
               required

@@ -1,6 +1,8 @@
 from flask import Flask
 from models import db
 from flask_migrate import Migrate
+from flask_restful import Api
+
 
 
 # create an instance of the flask app
@@ -15,6 +17,7 @@ migrate = Migrate(app=app, db=db)
 
 # initialize app to use sqlalchemy
 db.init_app(app=app)
+api = Api(app)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
