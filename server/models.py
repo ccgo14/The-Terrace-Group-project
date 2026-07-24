@@ -125,5 +125,7 @@ class Reaction(db.Model):
 
 
 class Follow(db.Model):
+    __tablename__ = 'follows'
+
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"), primary_key=True)
