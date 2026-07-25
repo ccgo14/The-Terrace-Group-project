@@ -4,8 +4,9 @@ from models import db, Category
 from schemas import category_schema, categories_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+from auth_utils import role_required  # Properly imported!
 
-# Standard logging fallback if 'extensions' module is not in your project
+# Standard logging fallback
 try:
     from extensions import log
 except ImportError:
@@ -15,13 +16,14 @@ except ImportError:
 
 # /categories
 class CategoriesResource(Resource):
-    # GET /categories - Fetch all categories
+    # GET /categories - Public: Fetch all categories
     def get(self):
         categories = Category.query.all()
         log.info("get_all_categories", request_data=categories_schema.dump(categories))
         return make_response(categories_schema.dump(categories), 200)
 
-    # POST /categories - Create a new category
+    # POST /categories - Protected: Admin/Author creation of categories
+    @role_required(["admin", "author"])
     def post(self):
         try:
             data = request.get_json() or {}
@@ -77,9 +79,9 @@ class CategoriesResource(Resource):
 
 # /categories/<int:category_id>
 class CategoryByIDResource(Resource):
-    # GET /categories/<int:category_id> - Fetch a single category
+    # GET /categories/<int:category_id> - Public: Fetch a single category
     def get(self, category_id):
-        category = Category.query.filter_by(id=category_id).first()
+        category = Category.query.filter_by(category_id=category_id).first()
 
         if category:
             return make_response(category_schema.dump(category), 200)
@@ -87,9 +89,10 @@ class CategoryByIDResource(Resource):
         response = {"status": 404, "message": "Category not found"}
         return make_response(response, 404)
 
-    # PATCH /categories/<int:category_id> - Update category selectively
+    # PATCH /categories/<int:category_id> - Protected: Admin/Author update
+    @role_required(["admin", "author"])
     def patch(self, category_id):
-        category = Category.query.filter_by(id=category_id).first()
+        category = Category.query.filter_by(category_id=category_id).first()
 
         if not category:
             return make_response({"status": 404, "message": "Category not found"}, 404)
@@ -134,9 +137,10 @@ class CategoryByIDResource(Resource):
             }
             return make_response(response, 500)
 
-    # DELETE /categories/<int:category_id> - Delete a category
+    # DELETE /categories/<int:category_id> - Protected: Admin only delete
+    @role_required(["admin"])
     def delete(self, category_id):
-        category = Category.query.filter_by(id=category_id).first()
+        category = Category.query.filter_by(category_id=category_id).first()
 
         if category:
             try:

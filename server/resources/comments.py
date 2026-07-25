@@ -1,11 +1,13 @@
 from flask import make_response, request
 from flask_restful import Resource
-from models import db, Comment, User, Article
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from models import db, Comment, Article, User
 from schemas import comment_schema, comments_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+from auth_utils import role_required
 
-# Standard logging fallback if 'extensions' module is not in your project
+# Standard logging fallback
 try:
     from extensions import log
 except ImportError:
@@ -15,35 +17,36 @@ except ImportError:
 
 # /comments
 class CommentsResource(Resource):
-    # GET /comments - Fetch all comments
+    # GET /comments - Admin-only endpoint for moderation/debugging
+    @role_required(["admin"])
     def get(self):
         comments = Comment.query.all()
-        log.info("get_all_comments", request_data=comments_schema.dump(comments))
         return make_response(comments_schema.dump(comments), 200)
 
-    # POST /comments - Create a new comment
+    # POST /comments - Protected: Post a new comment on an article (Any logged-in user)
+    @jwt_required()
     def post(self):
         try:
+            current_user_id = int(get_jwt_identity())
             data = request.get_json() or {}
 
-            # Validate and deserialize input using Marshmallow schema
+            # Override/assign author_id from the authenticated token
+            data["author_id"] = current_user_id
+
+            # Validate input using Marshmallow schema
             validated_data = comment_schema.load(data)
 
-            # Check foreign key existence
-            if not User.query.filter_by(id=validated_data["user_id"]).first():
-                return make_response(
-                    {"status": 404, "message": "User not found"}, 404
-                )
-            if not Article.query.filter_by(id=validated_data["article_id"]).first():
-                return make_response(
-                    {"status": 404, "message": "Article not found"}, 404
-                )
+            # Ensure the target article exists
+            article = Article.query.filter_by(article_id=validated_data["article_id"]).first()
+            if not article:
+                return make_response({"status": 404, "message": "Article not found"}, 404)
 
-            # Create new Comment instance
+            # Create new comment
             new_comment = Comment(
                 content=validated_data["content"],
-                user_id=validated_data["user_id"],
                 article_id=validated_data["article_id"],
+                author_id=current_user_id,
+                parent_id=validated_data.get("parent_id")
             )
 
             db.session.add(new_comment)
@@ -53,118 +56,96 @@ class CommentsResource(Resource):
 
         except ValidationError as err:
             log.error("validation_error", errors=err.messages)
-            response = {
+            return make_response({
                 "status": 400,
                 "message": "Validation error(s) occurred",
-                "errors": {**err.messages},
-            }
-            return make_response(response, 400)
+                "errors": {**err.messages}
+            }, 400)
 
         except IntegrityError as ie:
             db.session.rollback()
             log.error("integrity_error", error=str(ie))
-            response = {
-                "status": 409,
-                "message": "Database constraint violation occurred",
-            }
-            return make_response(response, 409)
+            return make_response({"status": 409, "message": "Database constraint error"}, 409)
 
         except Exception as e:
             db.session.rollback()
             log.error("unexpected_error", error=str(e))
-            response = {
-                "status": 500,
-                "message": "An error occurred",
-            }
-            return make_response(response, 500)
+            return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
 # /comments/<int:comment_id>
 class CommentByIDResource(Resource):
-    # GET /comments/<int:comment_id> - Fetch single comment
+    # GET /comments/<int:comment_id> - Public: Fetch a single comment by ID
     def get(self, comment_id):
-        comment = Comment.query.filter_by(id=comment_id).first()
-
+        comment = Comment.query.filter_by(comment_id=comment_id).first()
         if comment:
             return make_response(comment_schema.dump(comment), 200)
 
-        response = {"status": 404, "message": "Comment not found"}
-        return make_response(response, 404)
+        return make_response({"status": 404, "message": "Comment not found"}, 404)
 
-    # PATCH /comments/<int:comment_id> - Update comment selectively
+    # PATCH /comments/<int:comment_id> - Protected: Edit comment content (Owner only)
+    @jwt_required()
     def patch(self, comment_id):
-        comment = Comment.query.filter_by(id=comment_id).first()
+        current_user_id = int(get_jwt_identity())
+        comment = Comment.query.filter_by(comment_id=comment_id).first()
 
         if not comment:
             return make_response({"status": 404, "message": "Comment not found"}, 404)
 
+        # Ensure ownership
+        if comment.author_id != current_user_id:
+            return make_response(
+                {"status": 403, "message": "Permission denied: You can only edit your own comments"}, 403
+            )
+
         try:
             data = request.get_json() or {}
-
-            # Validate input partially for PATCH
             validated_data = comment_schema.load(data, partial=True)
 
-            for key, value in validated_data.items():
-                if hasattr(comment, key):
-                    setattr(comment, key, value)
+            # Update content
+            if "content" in validated_data:
+                comment.content = validated_data["content"]
 
             db.session.commit()
             return make_response(comment_schema.dump(comment), 200)
 
         except ValidationError as err:
             log.error("validation_error", errors=err.messages)
-            response = {
+            return make_response({
                 "status": 400,
                 "message": "Validation error(s) occurred",
-                "errors": {**err.messages},
-            }
-            return make_response(response, 400)
-
-        except IntegrityError as ie:
-            db.session.rollback()
-            log.error("integrity_error", error=str(ie))
-            response = {
-                "status": 409,
-                "message": "Database constraint violation occurred",
-            }
-            return make_response(response, 409)
+                "errors": {**err.messages}
+            }, 400)
 
         except Exception as e:
             db.session.rollback()
             log.error("unexpected_error", error=str(e))
-            response = {
-                "status": 500,
-                "message": "An error occurred",
-            }
-            return make_response(response, 500)
-        
+            return make_response({"status": 500, "message": "An error occurred"}, 500)
 
-    # /users/<int:user_id>/comments
-class UserCommentsResource(Resource):
-    # GET /users/<int:user_id>/comments - Fetch all comments made by a specific user
-    def get(self, user_id):
-        user = User.query.filter_by(id=user_id).first()
-        if not user:
-            return make_response({"status": 404, "message": "User not found"}, 404)
-
-        comments = Comment.query.filter_by(user_id=user_id).all()
-        log.info(f"get_user_{user_id}_comments", request_data=comments_schema.dump(comments))
-
-        return make_response(comments_schema.dump(comments), 200)
-
-    # DELETE /comments/<int:comment_id> - Delete comment
+    # DELETE /comments/<int:comment_id> - Protected: Delete a comment (Owner OR Admin)
+    @jwt_required()
     def delete(self, comment_id):
-        comment = Comment.query.filter_by(id=comment_id).first()
+        current_user_id = int(get_jwt_identity())
+        claims = get_jwt()
+        user_role = claims.get("role", "user")
 
-        if comment:
-            try:
-                db.session.delete(comment)
-                db.session.commit()
-                return make_response({"message": "Comment deleted successfully"}, 200)
-            except Exception as e:
-                db.session.rollback()
-                log.error("unexpected_error", error=str(e))
-                return make_response({"status": 500, "message": "An error occurred"}, 500)
+        comment = Comment.query.filter_by(comment_id=comment_id).first()
 
-        response = {"status": 404, "message": "Comment not found"}
-        return make_response(response, 404)
+        if not comment:
+            return make_response({"status": 404, "message": "Comment not found"}, 404)
+
+        # Allow deletion if the user is either the original author OR an Admin
+        if comment.author_id != current_user_id and user_role != "admin":
+            return make_response(
+                {"status": 403, "message": "Permission denied: You can only delete your own comments"}, 403
+            )
+
+        try:
+            db.session.delete(comment)
+            db.session.commit()
+            return make_response({"message": "Comment deleted successfully"}, 200)
+
+        except Exception as e:
+            db.session.rollback()
+            log.error("unexpected_error", error=str(e))
+            return make_response({"status": 500, "message": "An error occurred"}, 500)
