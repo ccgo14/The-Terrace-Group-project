@@ -1,3 +1,4 @@
+import structlog
 from flask import request, make_response, jsonify
 from flask_restful import Resource
 from flask_jwt_extended import (
@@ -15,6 +16,9 @@ from sqlalchemy.exc import IntegrityError
 from models import db, User, Profile
 from schemas import user_schema, login_schema, register_schema
 
+# Initialize structured logger for this module
+logger = structlog.get_logger()
+
 
 class RegisterResource(Resource):
     def post(self):
@@ -26,8 +30,10 @@ class RegisterResource(Resource):
 
             # Check if username or email already exists
             if User.query.filter_by(username=validated_data["username"]).first():
+                logger.warn("Registration failed: username taken", username=validated_data["username"])
                 return make_response({"status": 400, "message": "Username already taken"}, 400)
             if User.query.filter_by(email=validated_data["email"]).first():
+                logger.warn("Registration failed: email registered", email=validated_data["email"])
                 return make_response({"status": 400, "message": "Email already registered"}, 400)
 
             # Create User instance
@@ -56,6 +62,8 @@ class RegisterResource(Resource):
             db.session.add(profile)
             db.session.commit()
 
+            logger.info("New user registered successfully", user_id=user.user_id, username=user.username)
+
             # Include role inside JWT claims
             additional_claims = {"role": assigned_role}
 
@@ -82,9 +90,11 @@ class RegisterResource(Resource):
             return response
 
         except ValidationError as err:
+            logger.warn("Registration validation error", errors=err.messages)
             return make_response({"status": 400, "errors": err.messages}, 400)
-        except IntegrityError:
+        except IntegrityError as exc:
             db.session.rollback()
+            logger.error("Database integrity error during registration", error=str(exc))
             return make_response({"status": 409, "message": "Database conflict"}, 409)
 
 
@@ -98,11 +108,14 @@ class LoginResource(Resource):
 
             # Check user existence and verify hashed password
             if not user or not user.check_password(validated_data["password"]):
+                logger.warn("Failed login attempt", email=validated_data.get("email"))
                 return make_response({"status": 401, "message": "Invalid email or password"}, 401)
 
             # Retrieve role from linked profile or default to 'user'
             user_role = user.profile.role if (hasattr(user, 'profile') and user.profile) else "user"
             additional_claims = {"role": user_role}
+
+            logger.info("User logged in successfully", user_id=user.user_id, email=user.email)
 
             # Generate JWT tokens with claims
             access_token = create_access_token(
@@ -127,12 +140,14 @@ class LoginResource(Resource):
             return response
 
         except ValidationError as err:
+            logger.warn("Login validation error", errors=err.messages)
             return make_response({"status": 400, "errors": err.messages}, 400)
 
 
 class LogoutResource(Resource):
     def post(self):
         """Logs out the user by clearing the JWT cookies from the browser."""
+        logger.info("User logged out successfully")
         response = make_response({"message": "Successfully logged out"}, 200)
         
         # Deletes access_token_cookie and refresh_token_cookie
@@ -151,6 +166,8 @@ class RefreshTokenResource(Resource):
         # Preserve user role from existing refresh token claims
         user_role = claims.get("role", "user")
         
+        logger.info("Access token refreshed", user_id=current_user_id)
+
         new_access_token = create_access_token(
             identity=current_user_id,
             additional_claims={"role": user_role}
@@ -172,6 +189,8 @@ class MeResource(Resource):
         user = db.session.get(User, int(current_user_id))
 
         if not user:
+            logger.warn("Authenticated user profile not found in database", user_id=current_user_id)
             return make_response({"status": 404, "message": "User not found"}, 404)
 
+        logger.debug("Fetched current user profile", user_id=user.user_id)
         return make_response(user_schema.dump(user), 200)

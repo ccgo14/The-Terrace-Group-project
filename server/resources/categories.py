@@ -1,7 +1,7 @@
 from flask import make_response, request
 from flask_restful import Resource
-from models import db, Category
-from schemas import category_schema, categories_schema
+from models import db, Category, Article
+from schemas import category_schema, categories_schema, articles_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from auth_utils import role_required  # Properly imported!
@@ -154,3 +154,15 @@ class CategoryByIDResource(Resource):
 
         response = {"status": 404, "message": "Category not found"}
         return make_response(response, 404)
+
+
+# /categories/<int:category_id>/articles
+class CategoryArticlesResource(Resource):
+    # GET /categories/<int:category_id>/articles - Public: Fetch all articles belonging to a specific category
+    def get(self, category_id):
+        category = Category.query.filter_by(category_id=category_id).first()
+        if not category:
+            return make_response({"status": 404, "message": "Category not found"}, 404)
+        
+        articles = Article.query.filter_by(category_id=category_id).all()
+        return make_response(articles_schema.dump(articles), 200)

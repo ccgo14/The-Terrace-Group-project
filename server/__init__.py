@@ -1,14 +1,17 @@
+import logging
 import os
+import time
 from datetime import timedelta
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
+import structlog  
 
 # Import models & bcrypt from server directory
-from models import db, bcrypt
+from .models import db, bcrypt
 
 # Load environment variables from server/.env
 load_dotenv()
@@ -19,14 +22,38 @@ jwt = JWTManager()
 migrate = Migrate()
 
 
+def configure_logging():
+    """Configure structlog and standard library logging integration."""
+    logging.basicConfig(
+        format="%(message)s",
+        stream=logging.sys.stdout,
+        level=logging.INFO,
+    )
+
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.StackInfoRenderer(),
+            structlog.dev.set_exc_info,
+            structlog.processors.TimeStamper(fmt="iso"),
+            # ConsoleRenderer for pretty colored output in development
+            structlog.dev.ConsoleRenderer() if os.getenv("FLASK_ENV") != "production" else structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+        context_class=dict,
+        logger_factory=structlog.PrintLoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
+
 def create_app():
     app = Flask(__name__)
 
-    # ==========================================
     # APPLICATION CONFIGURATION (.env integration)
-    # ==========================================
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///instance/app.db")
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////{basedir}/instance/app.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Security & JWT Expiry
@@ -45,9 +72,50 @@ def create_app():
     app.config["JWT_REFRESH_COOKIE_PATH"] = "/auth/refresh"
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"  # Allows cross-port localhost requests (3000 -> 5555)
 
-    # ==========================================
+    # 0. INITIALIZE LOGGING & MIDDLEWARE
+    configure_logging()
+    logger = structlog.get_logger()
+    logger.info("Initializing Flask application", env=os.getenv("FLASK_ENV", "development"))
+
+    @app.before_request
+    def log_request_start():
+        g.start_time = time.time()
+        if request.path != "/favicon.ico":
+            logger.info(
+                "Incoming HTTP Request",
+                method=request.method,
+                path=request.path,
+                remote_addr=request.remote_addr,
+            )
+
+    @app.after_request
+    def log_request_complete(response):
+        if request.path == "/favicon.ico":
+            return response
+            
+        duration = time.time() - getattr(g, "start_time", time.time())
+        
+        log_method = logger.info
+        if 400 <= response.status_code < 500:
+            log_method = logger.warn
+        elif response.status_code >= 500:
+            log_method = logger.error
+
+        log_method(
+            "HTTP Request Completed",
+            method=request.method,
+            path=request.path,
+            status=response.status_code,
+            duration_seconds=round(duration, 4),
+        )
+        return response
+
+    @app.teardown_request
+    def log_request_exception(exception=None):
+        if exception:
+            logger.error("Unhandled exception during request lifecycle", error=str(exception), exc_info=True)
+
     # 1. INITIALIZE CORS
-    # ==========================================
     frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:3000")
     cors.init_app(
         app,
@@ -57,17 +125,13 @@ def create_app():
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
 
-    # ==========================================
     # 2. INITIALIZE EXTENSIONS
-    # ==========================================
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # ==========================================
     # 3. REGISTER CUSTOM JWT ERROR HANDLERS
-    # ==========================================
     @jwt.unauthorized_loader
     def missing_token_callback(error):
         return jsonify({
@@ -100,9 +164,7 @@ def create_app():
             "message": "This token has been revoked. Please log in again."
         }), 401
 
-    # ==========================================
     # 4. REGISTER RESTFUL API RESOURCES
-    # ==========================================
     api = Api(app)
     register_routes(api)
 
@@ -120,16 +182,15 @@ def register_routes(api):
     )
     from resources.users import (
         UsersResource, UserByIDResource, UserFollowResource, 
-        UserFollowersResource, UserFollowingResource, UserStatsResource,
-        UserArticlesResource, UserPredictionsResource, UserReactionsResource
+        UserFollowersResource, UserFollowingResource, UserStatsResource
     )
     from resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
-    from resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource
-    from resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource
+    from resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource    
+    from resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
     from resources.leagues import LeaguesResource, LeagueByIDResource
     from resources.teams import TeamsResource, TeamByIDResource
     from resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
-    from resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource
+    from resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
     from resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes

@@ -1,188 +1,144 @@
-from app import app
-from models import db, User, Article, Category, Reaction, Follow
+from datetime import datetime, timedelta
+from __init__ import create_app
+from models import db, User, Profile, Category, Article, Comment, Reaction, Follow, League, Team, Match, Prediction
+
+# Initialize the app using your factory function
+app = create_app()
 
 with app.app_context():
     print("Clearing old data...")
-    # Delete in reverse order of foreign key dependencies
+    # Delete in strict reverse order of foreign key dependencies
+    db.session.query(Prediction).delete()
+    db.session.query(Match).delete()
+    db.session.query(Team).delete()
+    db.session.query(League).delete()
     db.session.query(Follow).delete()
     db.session.query(Reaction).delete()
+    db.session.query(Comment).delete()
     db.session.query(Article).delete()
     db.session.query(Category).delete()
+    db.session.query(Profile).delete()
     db.session.query(User).delete()
-    
     db.session.commit()
 
-    print("Seeding hardcoded users...")
-    
-    users = [
-        User(
-            first_name='John',
-            last_name='Doe',
-            username='johndoe',
-            email='john.doe@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/john/200',
-            bio='Tech enthusiast and software developer working on full-stack web applications.',
-            role='admin'
-        ),
-        User(
-            first_name='Jane',
-            last_name='Smith',
-            username='janesmith',
-            email='jane.smith@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/jane/200',
-            bio='UI/UX designer who loves clean design, modern architecture, and good coffee.',
-            role='author'
-        ),
-        User(
-            first_name='Alex',
-            last_name='Johnson',
-            username='alexj',
-            email='alex.johnson@example.com',
-            password='Password123!',
-            gender='Non-binary',
-            profile_pic='https://picsum.photos/seed/alex/200',
-            bio='Data analyst exploring trend predictions and machine learning models.',
-            role='user'
-        ),
-        User(
-            first_name='Michael',
-            last_name='Brown',
-            username='mikebrown',
-            email='michael.brown@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/mike/200',
-            bio='Cybersecurity researcher sharing insights on network privacy and ethical hacking.',
-            role='author'
-        ),
-        User(
-            first_name='Emily',
-            last_name='Davis',
-            username='emilydavis',
-            email='emily.davis@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/emily/200',
-            bio='Content writer specialized in digital marketing strategies and brand storytelling.',
-            role='user'
-        ),
-        User(
-            first_name='David',
-            last_name='Wilson',
-            username='davidw',
-            email='david.wilson@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/david/200',
-            bio='DevOps engineer building robust CI/CD pipelines and managing cloud servers.',
-            role='admin'
-        ),
-        User(
-            first_name='Sarah',
-            last_name='Taylor',
-            username='saraht',
-            email='sarah.taylor@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/sarah/200',
-            bio='Mobile app developer working on cross-platform frameworks like React Native.',
-            role='author'
-        ),
-        User(
-            first_name='Chris',
-            last_name='Anderson',
-            username='canderson',
-            email='chris.anderson@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/chris/200',
-            bio='Passionate open-source contributor and Python community organizer.',
-            role='user'
-        ),
-        User(
-            first_name='Amanda',
-            last_name='Thomas',
-            username='athomas',
-            email='amanda.thomas@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/amanda/200',
-            bio='Product manager bridging technical requirements with user experience needs.',
-            role='user'
-        ),
-        User(
-            first_name='Daniel',
-            last_name='Jackson',
-            username='djackson',
-            email='daniel.jackson@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/daniel/200',
-            bio='Game developer crafting 3D mechanics and exploring interactive storytelling.',
-            role='author'
-        ),
-        User(
-            first_name='Jessica',
-            last_name='White',
-            username='jesswhite',
-            email='jessica.white@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/jess/200',
-            bio='Frontend engineer obsessed with CSS, animations, and accessible web standards.',
-            role='user'
-        ),
-        User(
-            first_name='Robert',
-            last_name='Harris',
-            username='rharris',
-            email='robert.harris@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/robert/200',
-            bio='Backend architect focused on scalable microservices and relational databases.',
-            role='user'
-        ),
-        User(
-            first_name='Sophia',
-            last_name='Martin',
-            username='smartin',
-            email='sophia.martin@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/sophia/200',
-            bio='Tech blogger covering the latest news in web development and cloud tech.',
-            role='author'
-        ),
-        User(
-            first_name='James',
-            last_name='Clark',
-            username='jclark',
-            email='james.clark@example.com',
-            password='Password123!',
-            gender='Male',
-            profile_pic='https://picsum.photos/seed/james/200',
-            bio='Full-stack developer enjoying Flask backends and modern JavaScript frontends.',
-            role='user'
-        ),
-        User(
-            first_name='Olivia',
-            last_name='Lewis',
-            username='olewis',
-            email='olivia.lewis@example.com',
-            password='Password123!',
-            gender='Female',
-            profile_pic='https://picsum.photos/seed/olivia/200',
-            bio='System administrator keeping cloud infrastructures running reliably around the clock.',
-            role='user'
-        )
+    print("Seeding Users and Profiles...")
+    users_data = [
+        ("John", "Doe", "johndoe", "john.doe@example.com", "Male", "admin", "Tech enthusiast and software developer."),
+        ("Jane", "Smith", "janesmith", "jane.smith@example.com", "Female", "author", "UI/UX designer who loves clean design."),
+        ("Alex", "Johnson", "alexj", "alex.johnson@example.com", "Non-binary", "user", "Data analyst exploring trend predictions."),
+        ("Michael", "Brown", "mikebrown", "michael.brown@example.com", "Male", "author", "Cybersecurity researcher sharing insights."),
+        ("Emily", "Davis", "emilydavis", "emily.davis@example.com", "Female", "user", "Content writer specialized in digital marketing."),
     ]
 
-    db.session.add_all(users)
+    created_users = []
+    for first, last, uname, email, gender, role, bio in users_data:
+        user = User(
+            first_name=first,
+            last_name=last,
+            username=uname,
+            email=email,
+        )
+        user.set_password("Password123!")
+        db.session.add(user)
+        db.session.flush() # Generates user.user_id
+
+        profile = Profile(
+            gender=gender,
+            bio=bio,
+            role=role,
+            profile_pic=f"https://picsum.photos/seed/{uname}/200",
+            user_id=user.user_id
+        )
+        db.session.add(profile)
+        created_users.append(user)
+
+    db.session.commit()
+    print(f"Seeded {len(created_users)} users with profiles.")
+
+    print("Seeding Categories...")
+    categories_data = [
+        ("Technology", "cpu", "Latest advancements in software, hardware, and AI."),
+        ("Sports", "trophy", "Match highlights, league standings, and sports predictions."),
+        ("Design", "palette", "UI/UX trends, web accessibility, and graphic tips."),
+        ("Cybersecurity", "shield", "Network privacy, vulnerability updates, and ethical hacking.")
+    ]
+
+    created_categories = []
+    for name, icon, desc in categories_data:
+        cat = Category(category_name=name, icon=icon, description=desc)
+        db.session.add(cat)
+        created_categories.append(cat)
+
+    db.session.commit()
+    print(f"Seeded {len(created_categories)} categories.")
+
+    print("Seeding Articles...")
+    articles_data = [
+        ("The Future of Flask in 2026", "Flask continues to power modern lightweight microservices...", created_users[0].user_id, created_categories[0].category_id),
+        ("Designing Accessible Web Apps", "Accessibility is no longer optional in modern frontend layouts...", created_users[1].user_id, created_categories[2].category_id),
+        ("Premier League Title Race Analysis", "Breaking down the tactical setups of top contenders this season...", created_users[3].user_id, created_categories[1].category_id),
+    ]
+
+    created_articles = []
+    for title, content, author_id, cat_id in articles_data:
+        article = Article(
+            title=title,
+            content=content,
+            author_id=author_id,
+            category_id=cat_id,
+            published_at=datetime.utcnow()
+        )
+        db.session.add(article)
+        created_articles.append(article)
+
+    db.session.commit()
+    print(f"Seeded {len(created_articles)} articles.")
+
+    print("Seeding Comments & Reactions...")
+    comment = Comment(
+        content="Amazing read! Really learned a lot about modern architecture.",
+        user_id=created_users[2].user_id,
+        article_id=created_articles[0].article_id
+    )
+    db.session.add(comment)
+
+    reaction = Reaction(
+        body="Very insightful breakdown!",
+        reaction_type="thumbs_up",
+        user_id=created_users[4].user_id,
+        article_id=created_articles[0].article_id
+    )
+    db.session.add(reaction)
     db.session.commit()
 
-    print(f"Successfully seeded {len(users)} users!")
+    print("Seeding Leagues, Teams & Matches...")
+    league = League(name="Premier League", country="England", logo_url="https://placeholder.com/pl.png")
+    db.session.add(league)
+    db.session.flush()
+
+    team_a = Team(name="Arsenal", short_code="ARS", league_id=league.id)
+    team_b = Team(name="Chelsea", short_code="CHE", league_id=league.id)
+    db.session.add_all([team_a, team_b])
+    db.session.flush()
+
+    match = Match(
+        league_id=league.id,
+        home_team_id=team_a.id,
+        away_team_id=team_b.id,
+        start_time=datetime.utcnow() + timedelta(days=1),
+        status="UPCOMING"
+    )
+    db.session.add(match)
+    db.session.flush()
+
+    prediction = Prediction(
+        user_id=created_users[2].user_id,
+        match_id=match.id,
+        predicted_home_score=2,
+        predicted_away_score=1,
+        status="PENDING"
+    )
+    db.session.add(prediction)
+
+    db.session.commit()
+    print("Database seeding completed successfully!")
