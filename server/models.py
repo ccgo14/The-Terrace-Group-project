@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
 
 metadata = MetaData(
     naming_convention={
@@ -23,24 +26,26 @@ class User(db.Model):
     last_name = db.Column(db.String(20), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)  # Stores the hashed password
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # 1. One-to-One with Profile (uselist=False ensures 1:1)
+    # Relationships
     profile = db.relationship('Profile', back_populates='user', uselist=False, cascade='all, delete-orphan')
-
-    # 2. One-to-Many with Articles
     articles = db.relationship('Article', back_populates='author', cascade='all, delete-orphan')
-
-    # 4. One-to-Many with Reactions
     reactions = db.relationship('Reaction', back_populates='user', cascade='all, delete-orphan')
-
-    # 6. Many-to-Many with Categories (via Follows bridge)
     followed_categories = db.relationship('Category', secondary='follows', back_populates='followers')
-
-    #a one-to-many relationship with Comment
     comments = db.relationship('Comment', back_populates='user', cascade='all, delete-orphan')
+    predictions = db.relationship('Prediction', back_populates='user', cascade='all, delete-orphan')
+
+    # PASSWORD HASHING METHODS
+    def set_password(self, password):
+        """Hashes the plain text password before saving."""
+        self.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    def check_password(self, password):
+        """Verifies plain text password against stored hash."""
+        return bcrypt.check_password_hash(self.password_hash, password)
 
 
 class Profile(db.Model):
@@ -50,10 +55,9 @@ class Profile(db.Model):
     gender = db.Column(db.String(10), nullable=False)
     profile_pic = db.Column(db.String(200), default='https://placeholder.com')
     bio = db.Column(db.String(400), nullable=False)
-    role = db.Column(db.Enum("admin", "author", "user"), nullable=False, default="user")
+    role = db.Column(db.Enum("admin", "author", "user", name="user_roles"), nullable=False, default="user")
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), unique=True, nullable=False)
 
-    # Relationship back to User
     user = db.relationship('User', back_populates='profile')
 
 
@@ -72,14 +76,12 @@ class Article(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     author = db.relationship('User', back_populates='articles')
     category = db.relationship('Category', back_populates='articles')
     reactions = db.relationship('Reaction', back_populates='article', cascade='all, delete-orphan')
     comments = db.relationship('Comment', back_populates='article', cascade='all, delete-orphan')
 
 
-# Add this new Comment class
 class Comment(db.Model):
     __tablename__ = 'comments'
 
@@ -90,7 +92,6 @@ class Comment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships back to User and Article
     user = db.relationship('User', back_populates='comments')
     article = db.relationship('Article', back_populates='comments')
 
@@ -104,7 +105,6 @@ class Category(db.Model):
     description = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
     articles = db.relationship('Article', back_populates='category', cascade='all, delete-orphan')
     followers = db.relationship('User', secondary='follows', back_populates='followed_categories')
 
@@ -119,7 +119,6 @@ class Reaction(db.Model):
     article_id = db.Column(db.Integer, db.ForeignKey("articles.article_id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
     user = db.relationship('User', back_populates='reactions')
     article = db.relationship('Article', back_populates='reactions')
 
@@ -129,3 +128,63 @@ class Follow(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"), primary_key=True)
+
+
+class League(db.Model):
+    __tablename__ = 'leagues'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(100), nullable=False)
+    logo_url = db.Column(db.String(255), nullable=True)
+
+    teams = db.relationship('Team', back_populates='league', cascade='all, delete-orphan')
+    matches = db.relationship('Match', back_populates='league', cascade='all, delete-orphan')
+
+
+class Team(db.Model):
+    __tablename__ = 'teams'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    short_code = db.Column(db.String(10), nullable=False)
+    logo_url = db.Column(db.String(255), nullable=True)
+    league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'), nullable=False)
+
+    league = db.relationship('League', back_populates='teams')
+    home_matches = db.relationship('Match', foreign_keys='Match.home_team_id', back_populates='home_team')
+    away_matches = db.relationship('Match', foreign_keys='Match.away_team_id', back_populates='away_team')
+
+
+class Match(db.Model):
+    __tablename__ = 'matches'
+
+    id = db.Column(db.Integer, primary_key=True)
+    league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'), nullable=False)
+    home_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+    away_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.Enum("UPCOMING", "LIVE", "FINISHED", name="match_status"), nullable=False, default="UPCOMING")
+    home_score = db.Column(db.Integer, nullable=True)
+    away_score = db.Column(db.Integer, nullable=True)
+    minute = db.Column(db.String(10), nullable=True)
+
+    league = db.relationship('League', back_populates='matches')
+    home_team = db.relationship('Team', foreign_keys=[home_team_id], back_populates='home_matches')
+    away_team = db.relationship('Team', foreign_keys=[away_team_id], back_populates='away_matches')
+    predictions = db.relationship('Prediction', back_populates='match', cascade='all, delete-orphan')
+
+
+class Prediction(db.Model):
+    __tablename__ = 'predictions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
+    predicted_home_score = db.Column(db.Integer, nullable=False)
+    predicted_away_score = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Enum("PENDING", "CORRECT", "INCORRECT", name="prediction_status"), nullable=False, default="PENDING")
+    points_awarded = db.Column(db.Integer, default=0, nullable=False)
+
+    user = db.relationship('User', back_populates='predictions')
+    match = db.relationship('Match', back_populates='predictions')
