@@ -1,11 +1,11 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from models import db, Comment, Article, User
-from schemas import comment_schema, comments_schema
+from ..models import db, Comment, Article, User
+from ..schemas import comment_schema, comments_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from auth_utils import role_required
+from ..auth_utils import role_required
 
 # Standard logging fallback
 try:
@@ -30,8 +30,8 @@ class CommentsResource(Resource):
             current_user_id = int(get_jwt_identity())
             data = request.get_json() or {}
 
-            # Override/assign author_id from the authenticated token
-            data["author_id"] = current_user_id
+            # Override/assign user_id from the authenticated token
+            data["user_id"] = current_user_id
 
             # Validate input using Marshmallow schema
             validated_data = comment_schema.load(data)
@@ -45,8 +45,7 @@ class CommentsResource(Resource):
             new_comment = Comment(
                 content=validated_data["content"],
                 article_id=validated_data["article_id"],
-                author_id=current_user_id,
-                parent_id=validated_data.get("parent_id")
+                user_id=current_user_id,
             )
 
             db.session.add(new_comment)
@@ -55,7 +54,7 @@ class CommentsResource(Resource):
             return make_response(comment_schema.dump(new_comment), 201)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             return make_response({
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -64,12 +63,12 @@ class CommentsResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error("integrity_error: %s", str(ie))
             return make_response({"status": 409, "message": "Database constraint error"}, 409)
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -93,7 +92,7 @@ class CommentByIDResource(Resource):
             return make_response({"status": 404, "message": "Comment not found"}, 404)
 
         # Ensure ownership
-        if comment.author_id != current_user_id:
+        if comment.user_id != current_user_id:
             return make_response(
                 {"status": 403, "message": "Permission denied: You can only edit your own comments"}, 403
             )
@@ -110,7 +109,7 @@ class CommentByIDResource(Resource):
             return make_response(comment_schema.dump(comment), 200)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             return make_response({
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -119,7 +118,7 @@ class CommentByIDResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
     # DELETE /comments/<int:comment_id> - Protected: Delete a comment (Owner OR Admin)
@@ -135,7 +134,7 @@ class CommentByIDResource(Resource):
             return make_response({"status": 404, "message": "Comment not found"}, 404)
 
         # Allow deletion if the user is either the original author OR an Admin
-        if comment.author_id != current_user_id and user_role != "admin":
+        if comment.user_id != current_user_id and user_role != "admin":
             return make_response(
                 {"status": 403, "message": "Permission denied: You can only delete your own comments"}, 403
             )
@@ -147,5 +146,5 @@ class CommentByIDResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
