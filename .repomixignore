@@ -1,0 +1,8 @@
+node_modules/
+dist/
+server/__pycache__/
+server/instance/
+server/migrations/versions/__pycache__/
+repomix-output.*
+*.db
+*.pyc

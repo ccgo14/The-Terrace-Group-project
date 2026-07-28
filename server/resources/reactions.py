@@ -93,7 +93,7 @@ class ArticleReactionsResource(Resource):
         article = Article.query.filter_by(article_id=article_id).first()
         if not article:
             return make_response({"status": 404, "message": "Article not found"}, 404)
-        
+
         reactions = Reaction.query.filter_by(article_id=article_id).all()
         log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
         return make_response(reactions_schema.dump(reactions), 200)
@@ -211,8 +211,8 @@ class ReactionUpvoteResource(Resource):
                 reaction.likes_count = (reaction.likes_count or 0) + 1
             db.session.commit()
             return make_response({
-                "status": 200, 
-                "message": "Reaction upvoted successfully", 
+                "status": 200,
+                "message": "Reaction upvoted successfully",
                 "likes_count": getattr(reaction, 'likes_count', 0)
             }, 200)
         except Exception as e:

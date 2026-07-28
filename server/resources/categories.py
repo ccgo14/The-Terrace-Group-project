@@ -163,6 +163,6 @@ class CategoryArticlesResource(Resource):
         category = Category.query.filter_by(category_id=category_id).first()
         if not category:
             return make_response({"status": 404, "message": "Category not found"}, 404)
-        
+
         articles = Article.query.filter_by(category_id=category_id).all()
         return make_response(articles_schema.dump(articles), 200)

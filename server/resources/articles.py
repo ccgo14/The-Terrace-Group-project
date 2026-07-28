@@ -241,8 +241,8 @@ class ArticleUpvoteResource(Resource):
                 article.likes_count = (article.likes_count or 0) + 1
             db.session.commit()
             return make_response({
-                "status": 200, 
-                "message": "Upvoted successfully", 
+                "status": 200,
+                "message": "Upvoted successfully",
                 "likes_count": getattr(article, 'likes_count', 0)
             }, 200)
         except Exception as e:

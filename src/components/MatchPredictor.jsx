@@ -1,33 +1,45 @@
 import { useState } from "react";
-import { currentUser } from "../data";
+import { useAuth } from "../context/AuthContext";
+import api from "../api/client";
 
-export default function MatchPredictor({ articleId }) {
+export default function MatchPredictor({ articleId: _articleId, matchId }) {
   const [homeScore, setHomeScore] = useState("");
   const [awayScore, setAwayScore] = useState("");
   const [reaction_type, setReaction_type] = useState("Home Win");
   const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const communityPercentage = 45;
+  const [communityPercentage, _setCommunityPercentage] = useState(45);
 
-  function submitPrediction(e) {
+  const { user } = useAuth();
+  const currentUserId = user?.id;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!currentUser?.permissions?.includes("read-write")) {
-      return alert("Read-only access");
+    if (!matchId) {
+      setError("Missing match context.");
+      return;
     }
 
-    console.log("Prediction Node Submitted:", {
-      articleId,
-      userId: currentUser.id,
-      homeScore,
-      awayScore,
-      reaction_type,
-      body,
-    });
-
-    setHomeScore("");
-    setAwayScore("");
-    setBody("");
-  }
+    setError("");
+    setSubmitting(true);
+    try {
+      await api.post("/predictions", {
+        match_id: matchId,
+        predicted_home_score: Number(homeScore),
+        predicted_away_score: Number(awayScore),
+      });
+      setHomeScore("");
+      setAwayScore("");
+      setBody("");
+    } catch (err) {
+      console.error("Failed to submit prediction:", err);
+      setError(err.response?.data?.message || "Failed to submit prediction.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-white/80 dark:bg-terracing/40 border border-black/10 dark:border-white/10 rounded-cardLg p-4">
@@ -40,7 +52,7 @@ export default function MatchPredictor({ articleId }) {
         </span>
       </div>
 
-      <form onSubmit={submitPrediction} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-2 items-center">
           <input
             type="number"
@@ -49,10 +61,10 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setHomeScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
             required
           />
-          <span className="text-neutral-500 dark:text-neutral-400 font-mono font-bold">-</span>
+          <span className="text-terracing/60 dark:text-floodlight/50 font-mono font-bold">-</span>
           <input
             type="number"
             placeholder="Away"
@@ -60,7 +72,7 @@ export default function MatchPredictor({ articleId }) {
             onChange={function (e) {
               setAwayScore(e.target.value);
             }}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
             required
           />
         </div>
@@ -70,7 +82,8 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setReaction_type(e.target.value);
           }}
-          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 appearance-none">
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 appearance-none"
+        >
           <option value="Home Win">Home Win</option>
           <option value="Away Win">Away Win</option>
           <option value="Draw">Draw</option>
@@ -82,13 +95,25 @@ export default function MatchPredictor({ articleId }) {
           onChange={function (e) {
             setBody(e.target.value);
           }}
-          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body h-20 resize-none focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
           required
         />
 
+        {error && (
+          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">{error}</p>
+        )}
+
+        {!currentUserId && (
+          <p className="text-sm font-mono text-center text-terracing/60 dark:text-floodlight/50">
+            You must be logged in to submit a prediction.
+          </p>
+        )}
+
         <button
           type="submit"
-          className="w-full bg-black text-white border-black rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:opacity-90 dark:bg-white dark:text-black dark:border-white transition-colors duration-100 active:translate-y-[2px]">
+          disabled={submitting || !currentUserId || !matchId}
+          className="w-full bg-black text-white border-black rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:opacity-90 dark:bg-white dark:text-black dark:border-white transition-colors duration-100 active:translate-y-[2px] disabled:opacity-40"
+        >
           Submit Prediction
         </button>
       </form>
