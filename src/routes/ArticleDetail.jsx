@@ -7,7 +7,7 @@ import { liveMatch, reactions } from "../data";
 import MatchPredictor from "../components/MatchPredictor";
 import CommentSection from "../components/CommentSection";
 import api from "../api/client";
-import { mapArticle, mapComment } from "../api/mappers";
+import { mapArticle } from "../api/mappers";
 
 export default function ArticleDetail() {
   const { id } = useParams();
@@ -199,7 +199,7 @@ export default function ArticleDetail() {
 
           {/* Sidebar with widgets */}
           <aside className="lg:col-span-1 space-y-4">
-            <MatchPredictor articleId={article.id} />
+            <MatchPredictor articleId={article.id} matchId={1} />
             <CommentSection articleId={article.id} />
           </aside>
         </div>
