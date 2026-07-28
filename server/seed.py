@@ -1,5 +1,5 @@
-from app import app
-from models import db, User, Article, Category, Reaction, Follow
+from .app import app
+from ..models import db, User, Article, Category, Reaction, Follow
 
 with app.app_context():
     print("Clearing old data...")
