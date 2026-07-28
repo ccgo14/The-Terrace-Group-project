@@ -13,8 +13,8 @@ from flask_jwt_extended import (
 )
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from models import db, User, Profile
-from schemas import user_schema, login_schema, register_schema
+from ..models import db, User, Profile
+from ..schemas import user_schema, login_schema, register_schema
 
 # Initialize structured logger for this module
 logger = structlog.get_logger()
