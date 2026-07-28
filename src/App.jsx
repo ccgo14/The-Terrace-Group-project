@@ -12,6 +12,7 @@ import AdminDashboard from "./routes/AdminDashboard";
 import PostArticle from "./routes/PostArticle";
 import MyComments from "./routes/MyComments";
 import Bookmarks from "./routes/Bookmarks";
+import MatchPredictorPage from "./routes/MatchPredictorPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function ProtectedRoute({ children }) {
@@ -20,7 +21,9 @@ function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <span className="font-mono text-sm text-terracing/60 dark:text-floodlight/50">Loading...</span>
+        <span className="font-mono text-sm text-terracing/60 dark:text-floodlight/50">
+          Loading...
+        </span>
       </div>
     );
   }
@@ -108,6 +111,54 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <PostArticle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-article"
+              element={
+                <ProtectedRoute>
+                  <PostArticle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-profile"
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/match-predictor/:matchId"
+              element={
+                <ProtectedRoute>
+                  <MatchPredictorPage />
                 </ProtectedRoute>
               }
             />
