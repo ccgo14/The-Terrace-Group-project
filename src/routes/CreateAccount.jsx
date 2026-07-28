@@ -51,17 +51,25 @@ export default function CreateAccount() {
     setError("");
     try {
       const res = await api.post("/auth/register", {
+        first_name: form.firstName,
+        last_name: form.lastName,
         username: form.username,
         email: form.email,
         password: form.password,
+        role: form.role.toLowerCase(),
       });
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       login(res.data.user);
       navigate("/");
     } catch (err) {
       console.error("Registration failed:", err);
-      setError(err.response?.data?.message || "Registration failed. Please try again.");
+      const serverError = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message;
+
+      setError(serverError || "Registration failed. Please try again.");
     }
   };
 

@@ -19,13 +19,27 @@ export default function LoginPage() {
         email: form.email,
         password: form.password,
       });
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      login(res.data.user);
+
+      const token = res.data.token || res.data.access_token;
+      const user = res.data.user;
+
+      if (token) localStorage.setItem("token", token);
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+        login(user);
+      }
+
       navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      const serverError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        (err.response?.data?.errors
+          ? Object.values(err.response.data.errors).flat().join(" ")
+          : null);
+
+      setError(serverError || "Login failed. Invalid credentials.");
     }
   };
 
