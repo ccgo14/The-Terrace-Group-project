@@ -5,12 +5,14 @@ from marshmallow import Schema, fields, ValidationError, validates_schema
 
 class LoginSchema(Schema):
     """Payload schema for POST /auth/login"""
+
     email = fields.Email(required=True)
     password = fields.Str(required=True)
 
 
 class RegisterSchema(Schema):
     """Payload schema for POST /auth/register"""
+
     first_name = fields.Str(required=True)
     last_name = fields.Str(required=True)
     username = fields.Str(required=True)
@@ -28,7 +30,9 @@ class RegisterSchema(Schema):
         if "username" in data and len(data["username"]) > 50:
             errors["username"] = ["Username cannot exceed 50 characters"]
         if "password" in data and not (6 <= len(data["password"]) <= 255):
-            errors["password"] = ["Password length must be between 6 and 255 characters"]
+            errors["password"] = [
+                "Password length must be between 6 and 255 characters"
+            ]
         if "role" in data and data["role"] not in ["admin", "author", "user"]:
             errors["role"] = ["Role must be one of: admin, author, user"]
         if errors:
@@ -69,6 +73,7 @@ profiles_schema = ProfileSchema(many=True)
 
 # 2. USER SCHEMAS
 
+
 class UserSchema(Schema):
     # Maps user_id primary key from model while serializing as 'id'
     id = fields.Int(attribute="user_id", dump_only=True)
@@ -83,7 +88,7 @@ class UserSchema(Schema):
     # Relationships
     profile = fields.Nested(ProfileSchema, exclude=("user",))
     articles = fields.List(fields.Nested("ArticleSchema", exclude=("author",)))
-    comments = fields.List(fields.Nested("CommentSchema", exclude=("user",)))
+    comments = fields.List(fields.Nested("CommentSchema", exclude=("user", "article")))
     predictions = fields.List(fields.Nested("PredictionSchema", exclude=("user",)))
 
     @validates_schema
@@ -96,7 +101,9 @@ class UserSchema(Schema):
         if "username" in data and len(data["username"]) > 50:
             errors["username"] = ["Username cannot exceed 50 characters"]
         if "password" in data and not (6 <= len(data["password"]) <= 255):
-            errors["password"] = ["Password length must be between 6 and 255 characters"]
+            errors["password"] = [
+                "Password length must be between 6 and 255 characters"
+            ]
         if errors:
             raise ValidationError(errors)
 
@@ -106,6 +113,7 @@ users_schema = UserSchema(many=True)
 
 
 # 3. CATEGORY SCHEMAS
+
 
 class CategorySchema(Schema):
     id = fields.Int(attribute="category_id", dump_only=True)
@@ -135,6 +143,7 @@ categories_schema = CategorySchema(many=True)
 
 # 4. ARTICLE SCHEMAS
 
+
 class ArticleSchema(Schema):
     id = fields.Int(attribute="article_id", dump_only=True)
     title = fields.Str(required=True)
@@ -151,8 +160,12 @@ class ArticleSchema(Schema):
     # author_id is dump_only because user identity is extracted from JWT in Resource methods
     author_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
-    author = fields.Nested(UserSchema, only=("id", "username", "first_name", "last_name"), dump_only=True)
-    category = fields.Nested(CategorySchema, only=("id", "category_name"), dump_only=True)
+    author = fields.Nested(
+        UserSchema, only=("id", "username", "first_name", "last_name"), dump_only=True
+    )
+    category = fields.Nested(
+        CategorySchema, only=("id", "category_name"), dump_only=True
+    )
     comments = fields.List(fields.Nested("CommentSchema", exclude=("article",)), dump_only=True)
 
     @validates_schema
@@ -170,8 +183,8 @@ article_schema = ArticleSchema()
 articles_schema = ArticleSchema(many=True)
 
 
-
 # 5. REACTION SCHEMAS
+
 
 class ReactionSchema(Schema):
     id = fields.Int(attribute="reaction_id", dump_only=True)
@@ -182,6 +195,7 @@ class ReactionSchema(Schema):
     # user_id is dump_only because user identity is extracted from JWT in Resource methods
     user_id = fields.Int(dump_only=True)
     article_id = fields.Int(required=True)
+    article = fields.Nested("ArticleSchema", exclude=("comments",), dump_only=True)
     user = fields.Nested(UserSchema, only=("id", "username"), dump_only=True)
 
     @validates_schema
@@ -201,6 +215,7 @@ reactions_schema = ReactionSchema(many=True)
 
 # 6. COMMENT SCHEMAS
 
+
 class CommentSchema(Schema):
     id = fields.Int(attribute="comment_id", dump_only=True)
     content = fields.Str(required=True)
@@ -211,6 +226,7 @@ class CommentSchema(Schema):
     # user_id is dump_only because user identity is extracted from JWT in Resource methods
     user_id = fields.Int(dump_only=True)
     article_id = fields.Int(required=True)
+    article = fields.Nested("ArticleSchema", exclude=("comments",), dump_only=True)
     user = fields.Nested(UserSchema, only=("id", "username"), dump_only=True)
 
     @validates_schema
@@ -228,12 +244,15 @@ comments_schema = CommentSchema(many=True)
 
 # 7. FOLLOW SCHEMAS
 
+
 class FollowSchema(Schema):
     user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
 
     user = fields.Nested(UserSchema, only=("id", "username"), dump_only=True)
-    category = fields.Nested(CategorySchema, only=("id", "category_name"), dump_only=True)
+    category = fields.Nested(
+        CategorySchema, only=("id", "category_name"), dump_only=True
+    )
 
 
 follow_schema = FollowSchema()
@@ -241,6 +260,7 @@ follows_schema = FollowSchema(many=True)
 
 
 # 8. SPORTS DOMAIN SCHEMAS
+
 
 class LeagueSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -282,8 +302,12 @@ class MatchSchema(Schema):
     minute = fields.Str(allow_none=True)
 
     league = fields.Nested(LeagueSchema, only=("id", "name"), dump_only=True)
-    home_team = fields.Nested(TeamSchema, only=("id", "name", "short_code"), dump_only=True)
-    away_team = fields.Nested(TeamSchema, only=("id", "name", "short_code"), dump_only=True)
+    home_team = fields.Nested(
+        TeamSchema, only=("id", "name", "short_code"), dump_only=True
+    )
+    away_team = fields.Nested(
+        TeamSchema, only=("id", "name", "short_code"), dump_only=True
+    )
 
 
 match_schema = MatchSchema()
@@ -301,7 +325,9 @@ class PredictionSchema(Schema):
     points_awarded = fields.Int(dump_default=0)
 
     user = fields.Nested(UserSchema, only=("id", "username"), dump_only=True)
-    match = fields.Nested(MatchSchema, only=("id", "start_time", "status"), dump_only=True)
+    match = fields.Nested(
+        MatchSchema, only=("id", "start_time", "status"), dump_only=True
+    )
 
 
 prediction_schema = PredictionSchema()
