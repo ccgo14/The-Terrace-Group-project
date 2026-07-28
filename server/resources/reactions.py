@@ -86,19 +86,6 @@ class ReactionsResource(Resource):
             return make_response(response, 500)
 
 
-# /articles/<int:article_id>/reactions
-class ArticleReactionsResource(Resource):
-    # GET /articles/<int:article_id>/reactions - Public: Fetch all reactions for an article
-    def get(self, article_id):
-        article = Article.query.filter_by(article_id=article_id).first()
-        if not article:
-            return make_response({"status": 404, "message": "Article not found"}, 404)
-
-        reactions = Reaction.query.filter_by(article_id=article_id).all()
-        log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
-        return make_response(reactions_schema.dump(reactions), 200)
-
-
 # /reactions/<int:reaction_id>
 class ReactionByIDResource(Resource):
     # GET /reactions/<int:reaction_id> - Public: Fetch single reaction
@@ -199,7 +186,7 @@ class ReactionByIDResource(Resource):
 
 # /reactions/<int:reaction_id>/upvote
 class ReactionUpvoteResource(Resource):
-    # POST /reactions/<int:reaction_id>/upvote - Protected: Upvote a reaction
+    # POST /reactions/<int:reaction_id>/upvote - Protected: Increment upvote count for a reaction
     @jwt_required()
     def post(self, reaction_id):
         reaction = Reaction.query.filter_by(reaction_id=reaction_id).first()
@@ -207,17 +194,12 @@ class ReactionUpvoteResource(Resource):
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
         try:
-            if hasattr(reaction, 'likes_count'):
-                reaction.likes_count = (reaction.likes_count or 0) + 1
+            reaction.upvotes = (getattr(reaction, "upvotes", 0) or 0) + 1
             db.session.commit()
-            return make_response({
-                "status": 200,
-                "message": "Reaction upvoted successfully",
-                "likes_count": getattr(reaction, 'likes_count', 0)
-            }, 200)
+            return make_response(reaction_schema.dump(reaction), 200)
         except Exception as e:
             db.session.rollback()
-            log.error("upvote_error", error=str(e))
+            log.error("unexpected_error", error=str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -231,5 +213,19 @@ class UserReactionsResource(Resource):
 
         reactions = Reaction.query.filter_by(user_id=user_id).all()
         log.info(f"get_user_{user_id}_reactions", request_data=reactions_schema.dump(reactions))
+
+        return make_response(reactions_schema.dump(reactions), 200)
+
+
+# /articles/<int:article_id>/reactions
+class ArticleReactionsResource(Resource):
+    # GET /articles/<int:article_id>/reactions - Public: Fetch all reactions belonging to a specific article
+    def get(self, article_id):
+        article = Article.query.filter_by(article_id=article_id).first()
+        if not article:
+            return make_response({"status": 404, "message": "Article not found"}, 404)
+
+        reactions = Reaction.query.filter_by(article_id=article_id).all()
+        log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
 
         return make_response(reactions_schema.dump(reactions), 200)

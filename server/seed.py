@@ -1,180 +1,166 @@
-import sys
-import os
 from datetime import datetime, timedelta
-
-# Ensure the server directory is in the Python path
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-
-from __init__ import create_app
+from app import app
+from extensions import db
 from models import (
-    db, User, Profile, Category, Article, Comment,
-    Reaction, Follow, League, Team, Match, Prediction
+    User,
+    Profile,
+    Article,
+    Comment,
+    Category,
+    Reaction,
+    Follow,
+    League,
+    Team,
+    Match,
+    Prediction,
 )
+from flask_bcrypt import Bcrypt
 
-app = create_app()
+bcrypt = Bcrypt()
 
-if not app:
-    raise RuntimeError("create_app() returned None — check your application factory.")
-
-# Application context wraps the entire seed lifecycle including error handling
 with app.app_context():
-    try:
-        # Ensures schema exists before attempting deletion queries
-        db.create_all()
+    print("🌱 Clearing existing data...")
+    # Clear tables in order to avoid foreign key constraint violations
+    Prediction.query.delete()
+    Reaction.query.delete()
+    Comment.query.delete()
+    Article.query.delete()
+    Profile.query.delete()
+    Follow.query.delete()
+    User.query.delete()
+    Match.query.delete()
+    Team.query.delete()
+    League.query.delete()
+    Category.query.delete()
+    db.session.commit()
 
-        print("Clearing old data...")
-        # Delete in strict reverse order of foreign key dependencies
-        db.session.query(Prediction).delete(synchronize_session=False)
-        db.session.query(Match).delete(synchronize_session=False)
-        db.session.query(Team).delete(synchronize_session=False)
-        db.session.query(League).delete(synchronize_session=False)
-        db.session.query(Follow).delete(synchronize_session=False)
-        db.session.query(Reaction).delete(synchronize_session=False)
-        db.session.query(Comment).delete(synchronize_session=False)
-        db.session.query(Article).delete(synchronize_session=False)
-        db.session.query(Category).delete(synchronize_session=False)
-        db.session.query(Profile).delete(synchronize_session=False)
-        db.session.query(User).delete(synchronize_session=False)
-        db.session.commit()
+    print("⚽ Seeding Leagues and Teams...")
+    epl = League(name="English Premier League", country="England", logo_url="https://placeholder.com/epl.png")
+    laliga = League(name="La Liga", country="Spain", logo_url="https://placeholder.com/laliga.png")
+    db.session.add_all([epl, laliga])
+    db.session.commit()
 
-        print("Seeding Users and Profiles...")
-        users_data = [
-            ("John", "Doe", "johndoe", "john.doe@example.com", "Male", "admin", "Tech enthusiast and software developer."),
-            ("Jane", "Smith", "janesmith", "jane.smith@example.com", "Female", "author", "UI/UX designer who loves clean design."),
-            ("Alex", "Johnson", "alexj", "alex.johnson@example.com", "Non-binary", "user", "Data analyst exploring trend predictions."),
-            ("Michael", "Brown", "mikebrown", "michael.brown@example.com", "Male", "author", "Cybersecurity researcher sharing insights."),
-            ("Emily", "Davis", "emilydavis", "emily.davis@example.com", "Female", "user", "Content writer specialized in digital marketing."),
-        ]
+    arsenal = Team(name="Arsenal", short_code="ARS", logo_url="https://placeholder.com/ars.png", league_id=epl.id)
+    chelsea = Team(name="Chelsea", short_code="CHE", logo_url="https://placeholder.com/che.png", league_id=epl.id)
+    real_madrid = Team(name="Real Madrid", short_code="RMA", logo_url="https://placeholder.com/rma.png", league_id=laliga.id)
+    barcelona = Team(name="Barcelona", short_code="BAR", logo_url="https://placeholder.com/bar.png", league_id=laliga.id)
+    db.session.add_all([arsenal, chelsea, real_madrid, barcelona])
+    db.session.commit()
 
-        created_users = []
-        for first, last, uname, email, gender, role, bio in users_data:
-            user = User(
-                first_name=first,
-                last_name=last,
-                username=uname,
-                email=email,
-            )
-            user.set_password("Password123!")
-            db.session.add(user)
-            db.session.flush()
+    print("📅 Seeding Matches...")
+    match1 = Match(
+        league_id=epl.id,
+        home_team_id=arsenal.id,
+        away_team_id=chelsea.id,
+        start_time=datetime.utcnow() - timedelta(days=1),
+        status="FINISHED",
+        home_score=2,
+        away_score=1,
+        minute="90'"
+    )
+    match2 = Match(
+        league_id=laliga.id,
+        home_team_id=real_madrid.id,
+        away_team_id=barcelona.id,
+        start_time=datetime.utcnow() + timedelta(days=2),
+        status="UPCOMING",
+        home_score=None,
+        away_score=None,
+        minute=None
+    )
+    db.session.add_all([match1, match2])
+    db.session.commit()
 
-            profile = Profile(
-                gender=gender,
-                bio=bio,
-                role=role,
-                profile_pic=f"https://picsum.photos/seed/{uname}/200",
-                user_id=user.user_id,
-            )
-            db.session.add(profile)
-            created_users.append(user)
+    print("👤 Seeding Users & Profiles...")
+    # Generate hashed password securely
+    default_password_hash = bcrypt.generate_password_hash("password123").decode("utf-8")
 
-        db.session.commit()
-        print(f"Seeded {len(created_users)} users with profiles.")
+    user1 = User(
+        first_name="Jadyn",
+        last_name="Wanja",
+        username="jadyn_w",
+        email="jadyn@theterrace.com",
+        password_hash=default_password_hash
+    )
+    user2 = User(
+        first_name="Frank",
+        last_name="Wanyeki",
+        username="frank_w",
+        email="frank@theterrace.com",
+        password_hash=default_password_hash
+    )
+    user3 = User(
+        first_name="Emmanuel",
+        last_name="Pneuma",
+        username="emmanuel_p",
+        email="emmanuel@theterrace.com",
+        password_hash=default_password_hash
+    )
+    db.session.add_all([user1, user2, user3])
+    db.session.commit()
 
-        print("Seeding Categories...")
-        categories_data = [
-            ("Technology", "cpu", "Latest advancements in software, hardware, and AI."),
-            ("Sports", "trophy", "Match highlights, league standings, and sports predictions."),
-            ("Design", "palette", "UI/UX trends, web accessibility, and graphic tips."),
-            ("Cybersecurity", "shield", "Network privacy, vulnerability updates, and ethical hacking."),
-        ]
+    profile1 = Profile(gender="Female", bio="Football analyst and die-hard Arsenal fan.", role="admin", user_id=user1.user_id)
+    profile2 = Profile(gender="Male", bio="La Liga enthusiast and tactical writer.", role="author", user_id=user2.user_id)
+    profile3 = Profile(gender="Male", bio="Casual sports fan and match predictor.", role="user", user_id=user3.user_id)
+    db.session.add_all([profile1, profile2, profile3])
+    db.session.commit()
 
-        created_categories = []
-        for name, icon, desc in categories_data:
-            cat = Category(category_name=name, icon=icon, description=desc)
-            db.session.add(cat)
-            created_categories.append(cat)
+    print("🏷️ Seeding Categories...")
+    cat_tactics = Category(category_name="Tactics & Analysis", icon="fa-chart-line", description="Deep dive into team structures and game plans.")
+    cat_transfers = Category(category_name="Transfer News", icon="fa-exchange-alt", description="Latest updates on player movements.")
+    db.session.add_all([cat_tactics, cat_transfers])
+    db.session.commit()
 
-        db.session.commit()
-        print(f"Seeded {len(created_categories)} categories.")
+    # User category follows
+    user1.followed_categories.append(cat_tactics)
+    user2.followed_categories.append(cat_transfers)
+    db.session.commit()
 
-        print("Seeding Articles...")
-        articles_data = [
-            (
-                "The Future of Flask in 2026",
-                "Flask continues to power modern lightweight microservices...",
-                created_users[0].user_id,
-                created_categories[0].category_id,
-            ),
-            (
-                "Designing Accessible Web Apps",
-                "Accessibility is no longer optional in modern frontend layouts...",
-                created_users[1].user_id,
-                created_categories[2].category_id,
-            ),
-            (
-                "Premier League Title Race Analysis",
-                "Breaking down the tactical setups of top contenders this season...",
-                created_users[3].user_id,
-                created_categories[1].category_id,
-            ),
-        ]
+    print("📰 Seeding Articles, Comments & Reactions...")
+    article1 = Article(
+        title="Title Race Intensifies in the Premier League",
+        content="Arsenal displayed remarkable composure in their recent fixture against Chelsea, securing a vital win...",
+        view_count=142,
+        likes_count=15,
+        author_id=user1.user_id,
+        category_id=cat_tactics.category_id,
+        published_at=datetime.utcnow() - timedelta(hours=12)
+    )
+    db.session.add(article1)
+    db.session.commit()
 
-        created_articles = []
-        for title, content, author_id, cat_id in articles_data:
-            article = Article(
-                title=title,
-                content=content,
-                author_id=author_id,
-                category_id=cat_id,
-                published_at=datetime.utcnow(),
-            )
-            db.session.add(article)
-            created_articles.append(article)
+    comment1 = Comment(
+        content="Fantastic analysis! The midfield block made all the difference.",
+        user_id=user2.user_id,
+        article_id=article1.article_id
+    )
+    reaction1 = Reaction(
+        body="Spot on!",
+        reaction_type="LIKE",
+        user_id=user3.user_id,
+        article_id=article1.article_id
+    )
+    db.session.add_all([comment1, reaction1])
+    db.session.commit()
 
-        db.session.commit()
-        print(f"Seeded {len(created_articles)} articles.")
+    print("🎯 Seeding Match Predictions...")
+    pred1 = Prediction(
+        user_id=user1.user_id,
+        match_id=match1.id,
+        predicted_home_score=2,
+        predicted_away_score=1,
+        status="CORRECT",
+        points_awarded=3
+    )
+    pred2 = Prediction(
+        user_id=user2.user_id,
+        match_id=match2.id,
+        predicted_home_score=1,
+        predicted_away_score=1,
+        status="PENDING",
+        points_awarded=0
+    )
+    db.session.add_all([pred1, pred2])
+    db.session.commit()
 
-        print("Seeding Comments & Reactions...")
-        comment = Comment(
-            content="Amazing read! Really learned a lot about modern architecture.",
-            user_id=created_users[2].user_id,
-            article_id=created_articles[0].article_id,
-        )
-        db.session.add(comment)
-
-        reaction = Reaction(
-            body="Very insightful breakdown!",
-            reaction_type="thumbs_up",
-            user_id=created_users[4].user_id,
-            article_id=created_articles[0].article_id,
-        )
-        db.session.add(reaction)
-        db.session.commit()
-
-        print("Seeding Leagues, Teams & Matches...")
-        league = League(name="Premier League", country="England", logo_url="https://placeholder.com/pl.png")
-        db.session.add(league)
-        db.session.flush()
-
-        team_a = Team(name="Arsenal", short_code="ARS", league_id=league.id)
-        team_b = Team(name="Chelsea", short_code="CHE", league_id=league.id)
-        db.session.add_all([team_a, team_b])
-        db.session.flush()
-
-        match = Match(
-            league_id=league.id,
-            home_team_id=team_a.id,
-            away_team_id=team_b.id,
-            start_time=datetime.utcnow() + timedelta(days=1),
-            status="UPCOMING",
-        )
-        db.session.add(match)
-        db.session.flush()
-
-        prediction = Prediction(
-            user_id=created_users[2].user_id,
-            match_id=match.id,
-            predicted_home_score=2,
-            predicted_away_score=1,
-            status="PENDING",
-        )
-        db.session.add(prediction)
-        db.session.commit()
-
-        print("Database seeding completed successfully!")
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"ERROR: Seeding failed — {e}")
-        sys.exit(1)
+    print("✅ Database successfully seeded!")

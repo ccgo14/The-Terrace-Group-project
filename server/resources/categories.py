@@ -1,6 +1,6 @@
 from flask import make_response, request
 from flask_restful import Resource
-from models import db, Category, Article
+from models import db, Category
 from schemas import category_schema, categories_schema, articles_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -161,8 +161,12 @@ class CategoryArticlesResource(Resource):
     # GET /categories/<int:category_id>/articles - Public: Fetch all articles belonging to a specific category
     def get(self, category_id):
         category = Category.query.filter_by(category_id=category_id).first()
+
         if not category:
             return make_response({"status": 404, "message": "Category not found"}, 404)
 
-        articles = Article.query.filter_by(category_id=category_id).all()
+        # Assumes a relationship exists on the Category model (e.g., category.articles)
+        articles = getattr(category, "articles", [])
+        log.info("get_category_articles", category_id=category_id, count=len(articles))
+        
         return make_response(articles_schema.dump(articles), 200)
