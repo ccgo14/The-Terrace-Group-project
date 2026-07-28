@@ -2,19 +2,16 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-# Ensure the server directory is in the Python path
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+# Resolve project root so this script runs both directly and via -m
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from __init__ import create_app
-from models import (
+from server import create_app
+from server.models import (
     db, User, Profile, Category, Article, Comment,
     Reaction, Follow, League, Team, Match, Prediction
 )
 
 app = create_app()
-
-if not app:
-    raise RuntimeError("create_app() returned None — check your application factory.")
 
 # Application context wraps the entire seed lifecycle including error handling
 with app.app_context():
