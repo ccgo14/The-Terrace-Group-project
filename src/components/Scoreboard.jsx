@@ -46,7 +46,7 @@ export function LeagueTable({ rows }) {
   return (
     <table className="w-full border-collapse font-mono text-xs">
       <thead>
-        <tr className="text-left text-neutral-600 dark:text-neutral-400 font-mono">
+        <tr className="text-left text-terracing/70 dark:text-floodlight/50 font-mono">
           <Th>Rank</Th>
           <Th>Team</Th>
           <Th className="text-right">Played</Th>

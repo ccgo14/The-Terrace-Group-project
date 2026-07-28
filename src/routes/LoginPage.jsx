@@ -2,15 +2,45 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell } from "../components/AuthShell";
 import { Field, Button } from "../components/UI";
+import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    localStorage.setItem("isAuthenticated", "true");
-    navigate("/profile/1");
+    setError("");
+    try {
+      const res = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password,
+      });
+
+      const token = res.data.token || res.data.access_token;
+      const user = res.data.user;
+
+      if (token) localStorage.setItem("token", token);
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+        login(user);
+      }
+
+      navigate("/");
+    } catch (err) {
+      console.error("Login failed:", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        (err.response?.data?.errors
+          ? Object.values(err.response.data.errors).flat().join(" ")
+          : null);
+
+      setError(serverError || "Login failed. Invalid credentials.");
+    }
   };
 
   return (
@@ -43,6 +73,9 @@ export default function LoginPage() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
         />
+        {error && (
+          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">{error}</p>
+        )}
         <Button type="submit">Sign In</Button>
       </form>
     </AuthShell>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell } from "../components/AuthShell";
 import { Field, Button } from "../components/UI";
+import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 const ROLES = ["User", "Author", "Admin"];
 
@@ -24,9 +26,11 @@ const INITIAL_FORM = {
 
 export default function CreateAccount() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState(INITIAL_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [error, setError] = useState("");
 
   const update = (key, value) => setForm({ ...form, [key]: value });
 
@@ -40,25 +44,33 @@ export default function CreateAccount() {
     }
   };
 
-  const handleClear = () => {
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview); // Free memory from object URL
-    }
-    setForm(INITIAL_FORM);
-    setAvatarPreview("");
-    setShowPassword(false);
-  };
-
   const bioMeta = BIO_META[form.role] || BIO_META.User;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    localStorage.setItem("isAuthenticated", "true");
-    
-    // Clear state before or during navigation
-    handleClear();
+    setError("");
+    try {
+      const res = await api.post("/auth/register", {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        role: form.role.toLowerCase(),
+      });
 
-    navigate("/profile/1");
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      login(res.data.user);
+      navigate("/");
+    } catch (err) {
+      console.error("Registration failed:", err);
+      const serverError = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message;
+
+      setError(serverError || "Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -101,7 +113,7 @@ export default function CreateAccount() {
         />
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Role
           </span>
           <select
@@ -127,7 +139,7 @@ export default function CreateAccount() {
         />
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Password
           </span>
           <div className="relative">
@@ -137,12 +149,12 @@ export default function CreateAccount() {
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
               required
-              className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
+              className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -150,7 +162,7 @@ export default function CreateAccount() {
         </label>
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             {bioMeta.label}
           </span>
           <textarea
@@ -158,12 +170,12 @@ export default function CreateAccount() {
             value={form.bio}
             onChange={(e) => update("bio", e.target.value)}
             rows={3}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
           />
         </label>
 
         <label className="block">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
+          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
             Avatar
           </span>
           <div
@@ -177,7 +189,7 @@ export default function CreateAccount() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="font-mono text-xs text-terracing/60 dark:text-floodlight/50">
                 Click to upload image
               </span>
             )}
@@ -191,6 +203,9 @@ export default function CreateAccount() {
           />
         </label>
 
+        {error && (
+          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">{error}</p>
+        )}
         <Button type="submit">Create Account</Button>
       </form>
     </AuthShell>

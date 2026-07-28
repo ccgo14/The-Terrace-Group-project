@@ -13,7 +13,7 @@ class User(db.Model):
     last_name = db.Column(db.String(20), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)  # Stores the hashed password
+    password_hash = db.Column(db.String(50), nullable=False)  # Stores the hashed password
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

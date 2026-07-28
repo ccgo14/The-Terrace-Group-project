@@ -1,14 +1,87 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Screen, Header, KindLabel, MetaRow, Button } from "../components/UI";
 import { Scoreboard } from "../components/Scoreboard";
 import { IconArrowLeft, IconUpvote } from "../components/Icons";
-import { articles, liveMatch, reactions } from "../data";
+import { liveMatch, reactions } from "../data";
 import MatchPredictor from "../components/MatchPredictor";
 import CommentSection from "../components/CommentSection";
+import api from "../api/client";
+import { mapArticle } from "../api/mappers";
 
 export default function ArticleDetail() {
   const { id } = useParams();
-  const article = articles.find((a) => String(a.id) === String(id)) || articles[0];
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get(`/articles/${id}`)
+      .then((res) => {
+        if (!cancelled) {
+          setArticle(mapArticle(res.data));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to fetch article:", err);
+          setError(err.response?.data?.message || "Failed to load article.");
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Screen>
+        <Header
+          title="Report"
+          left={
+            <Link
+              to="/"
+              className="text-night-pitch dark:text-floodlight block"
+              aria-label="Back">
+              <IconArrowLeft className="w-6 h-6" />
+            </Link>
+          }
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+          <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
+            Loading article...
+          </div>
+        </div>
+      </Screen>
+    );
+  }
+
+  if (error || !article) {
+    return (
+      <Screen>
+        <Header
+          title="Report"
+          left={
+            <Link
+              to="/"
+              className="text-night-pitch dark:text-floodlight block"
+              aria-label="Back">
+              <IconArrowLeft className="w-6 h-6" />
+            </Link>
+          }
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+          <div className="py-12 text-center font-mono text-sm text-red-600 dark:text-red-400 border border-black/10 dark:border-white/10 rounded-card">
+            {error || "Article not found."}
+          </div>
+        </div>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -40,7 +113,7 @@ export default function ArticleDetail() {
               <h1 className="mt-3 font-display font-bold uppercase leading-none text-4xl text-night-pitch dark:text-floodlight text-balance">
                 {article.title}
               </h1>
-              <p className="mt-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-3 font-mono text-xs text-terracing/60 dark:text-floodlight/50">
                 By {article.author} · {article.time} ago
               </p>
             </div>
@@ -56,7 +129,7 @@ export default function ArticleDetail() {
                 <li
                   key={i}
                   className="flex gap-4 py-2.5 border-b border-black/10 dark:border-white/10 first:border-t">
-                  <span className="font-mono text-sm text-neutral-500 dark:text-neutral-400 w-8 shrink-0">
+                  <span className="font-mono text-sm text-terracing/60 dark:text-floodlight/50 w-8 shrink-0">
                     {e.min}
                   </span>
                   <span className="text-sm text-night-pitch dark:text-floodlight">
@@ -101,14 +174,14 @@ export default function ArticleDetail() {
                        <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight min-w-0 truncate">
                          {r.author}
                        </span>
-                      <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-                        {r.time}
-                      </span>
+                       <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
+                         {r.time}
+                       </span>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                    <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80">
                       {r.body}
                     </p>
-                    <button className="mt-2 flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-amber-live transition-colors duration-100 active:translate-y-[2px]">
+                    <button className="mt-2 flex items-center gap-1.5 text-terracing/60 dark:text-floodlight/50 hover:text-terracing dark:hover:text-floodlight transition-colors duration-100 active:translate-y-[2px]">
                       <IconUpvote className="w-4 h-4" />
                       <span className="font-mono text-xs">{r.upvotes}</span>
                     </button>

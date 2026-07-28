@@ -18,7 +18,8 @@ export function Screen({
     <div
       className={`w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight ${
         sidebar ? "lg:pl-64" : ""
-      } ${nav ? "pb-20 lg:pb-0" : ""}`}>
+      } ${nav ? "pb-20 lg:pb-0" : ""}`}
+    >
       {children}
     </div>
   );
@@ -37,14 +38,12 @@ export function Header({ title, left, right }) {
           <button
             type="button"
             onClick={() => {
-              const root = document.documentElement;
-              const isDark = root.classList.toggle("dark");
-              root.classList.add("[&_*]:!transition-none");
-              setTimeout(() => root.classList.remove("[&_*]:!transition-none"), 50);
+              const isDark = document.documentElement.classList.toggle("dark");
               localStorage.setItem("theme", isDark ? "dark" : "light");
             }}
             className="p-2 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
-            aria-label="Toggle Theme">
+            aria-label="Toggle Theme"
+          >
             {document.documentElement.classList.contains("dark") ? (
               <IconSun className="w-5 h-5" />
             ) : (
@@ -61,7 +60,7 @@ export function Header({ title, left, right }) {
 // ---- Kind label (MATCH REPORT / FAN REACTION) ------------------------------
 export function KindLabel({ children }) {
   return (
-    <span className="inline-block font-mono text-[10px] tracking-[0.12em] uppercase text-terracing/70 dark:text-floodlight/50 border border-black/10 dark:border-white/10 px-1.5 py-0.5">
+    <span className="inline-block font-mono text-[10px] tracking-[0.12em] uppercase text-neutral-600 dark:text-neutral-400 border border-black/10 dark:border-white/10 px-1.5 py-0.5">
       {children}
     </span>
   );
@@ -98,12 +97,12 @@ export function Button({
 export function Field({ label, ...props }) {
   return (
     <label className="block">
-      <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-terracing/70 dark:text-floodlight/50 mb-1.5">
+      <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-400 mb-1.5">
         {label}
       </span>
       <input
         className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight
-        placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
+        placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-black/50 dark:focus:border-white/50"
         {...props}
       />
     </label>
@@ -113,7 +112,7 @@ export function Field({ label, ...props }) {
 // ---- Article meta row (upvotes / comments) ---------------------------------
 export function MetaRow({ upvotes, comments }) {
   return (
-    <div className="flex items-center gap-4 text-terracing/60 dark:text-floodlight/50">
+    <div className="flex items-center gap-4 text-neutral-500 dark:text-neutral-400">
       <span className="flex items-center gap-1.5">
         <IconUpvote className="w-4 h-4" />
         <span className="font-mono text-xs">{upvotes}</span>

@@ -43,7 +43,7 @@ export default function CommentSection({ articleId }) {
   return (
     <div className="relative">
       <div className="max-h-96 overflow-y-auto p-5 space-y-4">
-        <h4 className="font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-600 dark:text-neutral-400">
+        <h4 className="font-mono text-[10px] uppercase tracking-[0.12em] text-terracing/70 dark:text-floodlight/50">
           Community Stances
         </h4>
 
@@ -57,7 +57,7 @@ export default function CommentSection({ articleId }) {
                 <img
                   src={author?.avatar || users?.[0]?.avatar || "/images/default-avatar.png"}
                   alt={author?.name || "Anonymous"}
-                  className="w-8 h-8 rounded-full bg-neutral-500/10 dark:bg-neutral-400/10 border border-black/10 dark:border-white/10 flex-shrink-0"
+                  className="w-8 h-8 rounded-full bg-terracing/10 dark:bg-floodlight/10 border border-black/10 dark:border-white/10 flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline">
@@ -65,15 +65,15 @@ export default function CommentSection({ articleId }) {
                       <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
                         {author?.name || "Anonymous"}
                       </span>
-                      <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
                         5 Minutes Ago
                       </span>
                     </div>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-neutral-600 dark:text-neutral-400 border border-black/10 dark:border-white/10 px-1.5 py-0.5 rounded-card">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/70 dark:text-floodlight/50 border border-black/10 dark:border-white/10 px-1.5 py-0.5 rounded-card">
                       {reaction.reaction_type || "prediction"}
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 mt-1">
+                  <p className="text-sm leading-relaxed text-night-pitch dark:text-floodlight/80 mt-1">
                     {reaction.details || reaction.body}
                   </p>
                 </div>
@@ -83,12 +83,12 @@ export default function CommentSection({ articleId }) {
         </div>
 
         {/* Upvote / Downvote actions */}
-        <div className="flex gap-4 items-center pt-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex gap-4 items-center pt-2 text-xs text-terracing/60 dark:text-floodlight/50">
           <button
             onClick={function () {
               setUpvotes(upvotes + 1);
             }}
-            className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors duration-100">
+            className="flex items-center gap-1 text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white transition-colors duration-100">
             <svg
               className="w-3.5 h-3.5"
               fill="none"
@@ -107,7 +107,7 @@ export default function CommentSection({ articleId }) {
             onClick={function () {
               setDownvotes(downvotes + 1);
             }}
-            className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors duration-100">
+            className="flex items-center gap-1 text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white transition-colors duration-100">
             <svg
               className="w-3.5 h-3.5"
               fill="none"
@@ -140,7 +140,7 @@ export default function CommentSection({ articleId }) {
           onChange={function (e) {
             setNewCommentText(e.target.value);
           }}
-          className="flex-1 px-4 py-2.5 text-sm text-night-pitch dark:text-floodlight bg-transparent border border-black/10 dark:border-white/10 rounded-card focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+          className="flex-1 px-4 py-2.5 text-sm text-night-pitch dark:text-floodlight bg-transparent border border-black/10 dark:border-white/10 rounded-card focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
         />
         <button
           type="submit"
@@ -148,7 +148,7 @@ export default function CommentSection({ articleId }) {
           className={`w-10 h-10 rounded-card flex items-center justify-center transition-colors duration-100 flex-shrink-0 ${
             newCommentText.trim()
               ? "bg-night-pitch text-floodlight border border-night-pitch hover:bg-floodlight hover:text-night-pitch dark:bg-floodlight dark:text-night-pitch dark:border-floodlight dark:hover:bg-night-pitch dark:hover:text-floodlight"
-              : "bg-transparent text-neutral-500 dark:text-neutral-400 border border-black/10 dark:border-white/10 cursor-not-allowed"
+              : "bg-transparent text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 cursor-not-allowed"
           }`}>
           <svg
             className="w-4 h-4"
