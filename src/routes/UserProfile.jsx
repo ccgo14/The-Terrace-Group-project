@@ -39,7 +39,7 @@ export default function Profile() {
     }
   }, []);
 
-  const userId = storedUser?.id;
+  const userId = storedUser?.id || storedUser?.user_id;
 
   useEffect(() => {
     if (!userId) {
