@@ -1,12 +1,16 @@
+import logging
 import os
+import time
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
+import structlog
+from flask_sqlalchemy import SQLAlchemy
 
 # Import models & bcrypt from server directory
 from .models import db, bcrypt
@@ -15,18 +19,42 @@ from .models import db, bcrypt
 env_path = Path(__file__).parent / ".env"
 load_dotenv(env_path)
 
-# Instantiate extensions
+# Instantiate extensions (FIXED: db is now an instance)
 cors = CORS()
 jwt = JWTManager()
+db = SQLAlchemy()
 migrate = Migrate()
+
+
+def configure_logging():
+    """Configure structlog and standard library logging integration."""
+    logging.basicConfig(
+        format="%(message)s",
+        stream=logging.sys.stdout,
+        level=logging.INFO,
+    )
+
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.StackInfoRenderer(),
+            structlog.dev.set_exc_info,
+            structlog.processors.TimeStamper(fmt="iso"),
+            # ConsoleRenderer for pretty colored output in development
+            structlog.dev.ConsoleRenderer() if os.getenv("FLASK_ENV") != "production" else structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+        context_class=dict,
+        logger_factory=structlog.PrintLoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
 
 
 def create_app():
     app = Flask(__name__)
 
-    # ==========================================
     # APPLICATION CONFIGURATION (.env integration)
-    # ==========================================
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
         "DATABASE_URL", "sqlite:///instance/app.db"
@@ -53,9 +81,50 @@ def create_app():
         "Lax"  # Allows cross-port localhost requests (3000 -> 5555)
     )
 
-    # ==========================================
+    # 0. INITIALIZE LOGGING & MIDDLEWARE
+    configure_logging()
+    logger = structlog.get_logger()
+    logger.info("Initializing Flask application", env=os.getenv("FLASK_ENV", "development"))
+
+    @app.before_request
+    def log_request_start():
+        g.start_time = time.time()
+        if request.path != "/favicon.ico":
+            logger.info(
+                "Incoming HTTP Request",
+                method=request.method,
+                path=request.path,
+                remote_addr=request.remote_addr,
+            )
+
+    @app.after_request
+    def log_request_complete(response):
+        if request.path == "/favicon.ico":
+            return response
+
+        duration = time.time() - getattr(g, "start_time", time.time())
+
+        log_method = logger.info
+        if 400 <= response.status_code < 500:
+            log_method = logger.warn
+        elif response.status_code >= 500:
+            log_method = logger.error
+
+        log_method(
+            "HTTP Request Completed",
+            method=request.method,
+            path=request.path,
+            status=response.status_code,
+            duration_seconds=round(duration, 4),
+        )
+        return response
+
+    @app.teardown_request
+    def log_request_exception(exception=None):
+        if exception:
+            logger.error("Unhandled exception during request lifecycle", error=str(exception), exc_info=True)
+
     # 1. INITIALIZE CORS
-    # ==========================================
     frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173")
     cors.init_app(
         app,
@@ -70,17 +139,14 @@ def create_app():
         allow_headers=["Content-Type", "Authorization", "X-CSRF-TOKEN"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
-    # ==========================================
+
     # 2. INITIALIZE EXTENSIONS
-    # ==========================================
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # ==========================================
     # 3. REGISTER CUSTOM JWT ERROR HANDLERS
-    # ==========================================
     @jwt.unauthorized_loader
     def missing_token_callback(error):
         return (
@@ -133,9 +199,7 @@ def create_app():
             401,
         )
 
-    # ==========================================
     # 4. REGISTER RESTFUL API RESOURCES
-    # ==========================================
     api = Api(app)
     register_routes(api)
 
@@ -147,7 +211,7 @@ def register_routes(api):
     from .resources.auth import (
         RegisterResource,
         LoginResource,
-        LogoutResource,  # Added LogoutResource
+        LogoutResource,
         MeResource,
         RefreshTokenResource,
     )
@@ -159,7 +223,7 @@ def register_routes(api):
         UserFollowingResource,
         UserStatsResource,
     )
-    from .resources.categories import CategoriesResource, CategoryByIDResource
+    from .resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
     from .resources.articles import (
         ArticlesResource,
         ArticleByIDResource,
@@ -169,7 +233,9 @@ def register_routes(api):
     )
     from .resources.reactions import (
         ReactionsResource,
+        ArticleReactionsResource,
         ReactionByIDResource,
+        ReactionUpvoteResource,
         UserReactionsResource,
     )
     from .resources.leagues import LeaguesResource, LeagueByIDResource
@@ -193,7 +259,7 @@ def register_routes(api):
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")
     api.add_resource(LoginResource, "/auth/login")
-    api.add_resource(LogoutResource, "/auth/logout")  # Registered logout endpoint
+    api.add_resource(LogoutResource, "/auth/logout")
     api.add_resource(MeResource, "/auth/me")
     api.add_resource(RefreshTokenResource, "/auth/refresh")
 
@@ -211,6 +277,7 @@ def register_routes(api):
     # Categories
     api.add_resource(CategoriesResource, "/categories")
     api.add_resource(CategoryByIDResource, "/categories/<int:category_id>")
+    api.add_resource(CategoryArticlesResource, "/categories/<int:category_id>/articles")
 
     # Articles
     api.add_resource(ArticlesResource, "/articles")
@@ -220,7 +287,9 @@ def register_routes(api):
 
     # Reactions
     api.add_resource(ReactionsResource, "/reactions")
+    api.add_resource(ArticleReactionsResource, "/articles/<int:article_id>/reactions")
     api.add_resource(ReactionByIDResource, "/reactions/<int:reaction_id>")
+    api.add_resource(ReactionUpvoteResource, "/reactions/<int:reaction_id>/upvote")
 
     # Leagues & Teams
     api.add_resource(LeaguesResource, "/leagues")

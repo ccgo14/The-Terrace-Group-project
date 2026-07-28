@@ -1,6 +1,6 @@
 from flask import make_response, request
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt  # <-- Added get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from ..models import db, Reaction, User, Article
 from ..schemas import reaction_schema, reactions_schema
 from marshmallow import ValidationError
@@ -84,6 +84,19 @@ class ReactionsResource(Resource):
                 "message": "An error occurred",
             }
             return make_response(response, 500)
+
+
+# /articles/<int:article_id>/reactions
+class ArticleReactionsResource(Resource):
+    # GET /articles/<int:article_id>/reactions - Public: Fetch all reactions for an article
+    def get(self, article_id):
+        article = Article.query.filter_by(article_id=article_id).first()
+        if not article:
+            return make_response({"status": 404, "message": "Article not found"}, 404)
+
+        reactions = Reaction.query.filter_by(article_id=article_id).all()
+        log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
+        return make_response(reactions_schema.dump(reactions), 200)
 
 
 # /reactions/<int:reaction_id>
@@ -181,6 +194,30 @@ class ReactionByIDResource(Resource):
         except Exception as e:
             db.session.rollback()
             log.error("unexpected_error", error=str(e))
+            return make_response({"status": 500, "message": "An error occurred"}, 500)
+
+
+# /reactions/<int:reaction_id>/upvote
+class ReactionUpvoteResource(Resource):
+    # POST /reactions/<int:reaction_id>/upvote - Protected: Upvote a reaction
+    @jwt_required()
+    def post(self, reaction_id):
+        reaction = Reaction.query.filter_by(reaction_id=reaction_id).first()
+        if not reaction:
+            return make_response({"status": 404, "message": "Reaction not found"}, 404)
+
+        try:
+            if hasattr(reaction, 'likes_count'):
+                reaction.likes_count = (reaction.likes_count or 0) + 1
+            db.session.commit()
+            return make_response({
+                "status": 200,
+                "message": "Reaction upvoted successfully",
+                "likes_count": getattr(reaction, 'likes_count', 0)
+            }, 200)
+        except Exception as e:
+            db.session.rollback()
+            log.error("upvote_error", error=str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
