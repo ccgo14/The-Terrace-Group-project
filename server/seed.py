@@ -16,8 +16,12 @@ app = create_app()
 if not app:
     raise RuntimeError("create_app() returned None — check your application factory.")
 
-try:
-    with app.app_context():
+# Application context wraps the entire seed lifecycle including error handling
+with app.app_context():
+    try:
+        # Ensures schema exists before attempting deletion queries
+        db.create_all()
+
         print("Clearing old data...")
         # Delete in strict reverse order of foreign key dependencies
         db.session.query(Prediction).delete(synchronize_session=False)
@@ -170,7 +174,7 @@ try:
 
         print("Database seeding completed successfully!")
 
-except Exception as e:
-    db.session.rollback()
-    print(f"ERROR: Seeding failed — {e}")
-    sys.exit(1)
+    except Exception as e:
+        db.session.rollback()
+        print(f"ERROR: Seeding failed — {e}")
+        sys.exit(1)

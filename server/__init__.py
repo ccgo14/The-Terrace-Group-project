@@ -13,7 +13,7 @@ import structlog
 from flask_sqlalchemy import SQLAlchemy
 
 # Import models & bcrypt from server directory
-from .models import db, bcrypt
+from models import db, bcrypt
 
 # Load environment variables from server/.env explicitly
 env_path = Path(__file__).parent / ".env"
@@ -22,7 +22,7 @@ load_dotenv(env_path)
 # Instantiate extensions (FIXED: db is now an instance)
 cors = CORS()
 jwt = JWTManager()
-db = SQLAlchemy()
+#db = SQLAlchemy()
 migrate = Migrate()
 
 
@@ -207,15 +207,15 @@ def create_app():
 
 
 def register_routes(api):
-    # Import resource classes relative to server structure
-    from .resources.auth import (
+    # Import resource classes using absolute/direct imports relative to server directory
+    from resources.auth import (
         RegisterResource,
         LoginResource,
         LogoutResource,
         MeResource,
         RefreshTokenResource,
     )
-    from .resources.users import (
+    from resources.users import (
         UsersResource,
         UserByIDResource,
         UserFollowResource,
@@ -223,38 +223,42 @@ def register_routes(api):
         UserFollowingResource,
         UserStatsResource,
     )
-    from .resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
-    from .resources.articles import (
+    from resources.categories import (
+        CategoriesResource,
+        CategoryByIDResource,
+        CategoryArticlesResource,
+    )
+    from resources.articles import (
         ArticlesResource,
         ArticleByIDResource,
         ArticleUpvoteResource,
         ArticleCommentsResource,
         UserArticlesResource,
     )
-    from .resources.reactions import (
+    from resources.reactions import (
         ReactionsResource,
         ArticleReactionsResource,
         ReactionByIDResource,
         ReactionUpvoteResource,
         UserReactionsResource,
     )
-    from .resources.leagues import LeaguesResource, LeagueByIDResource
-    from .resources.teams import TeamsResource, TeamByIDResource
-    from .resources.matches import (
+    from resources.leagues import LeaguesResource, LeagueByIDResource
+    from resources.teams import TeamsResource, TeamByIDResource
+    from resources.matches import (
         MatchesResource,
         MatchByIDResource,
         MatchLiveResource,
         MatchEventsResource,
         MatchPredictionsResource,
     )
-    from .resources.predictions import (
+    from resources.predictions import (
         PredictionsResource,
         PredictionByIDResource,
         PredictionResolveResource,
         UserPredictionsResource,
     )
-    from .resources.comments import CommentsResource, CommentByIDResource
-    from .resources.admin import AdminReportsResource, AdminArticlePublishResource
+    from resources.comments import CommentsResource, CommentByIDResource
+    from resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")

@@ -13,8 +13,8 @@ from flask_jwt_extended import (
 )
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from ..models import db, User, Profile
-from ..schemas import user_schema, login_schema, register_schema
+from models import db, User, Profile
+from schemas import user_schema, login_schema, register_schema
 
 # Initialize structured logger for this module
 logger = structlog.get_logger()
@@ -52,7 +52,7 @@ class RegisterResource(Resource):
 
             # SECURITY FIX: Force default role to 'user' on public registration
             assigned_role = "user"
-            
+
             profile = Profile(
                 user_id=user.user_id,
                 role=assigned_role,
@@ -69,7 +69,7 @@ class RegisterResource(Resource):
 
             # Generate tokens
             access_token = create_access_token(
-                identity=str(user.user_id), 
+                identity=str(user.user_id),
                 additional_claims=additional_claims
             )
             refresh_token = create_refresh_token(
@@ -120,7 +120,7 @@ class LoginResource(Resource):
 
             # Generate JWT tokens with claims
             access_token = create_access_token(
-                identity=str(user.user_id), 
+                identity=str(user.user_id),
                 additional_claims=additional_claims
             )
             refresh_token = create_refresh_token(
@@ -151,10 +151,10 @@ class LogoutResource(Resource):
         """Logs out the user by clearing the JWT cookies from the browser."""
         logger.info("User logged out successfully")
         response = make_response({"message": "Successfully logged out"}, 200)
-        
+
         # Deletes access_token_cookie and refresh_token_cookie
         unset_jwt_cookies(response)
-        
+
         return response
 
 
@@ -164,10 +164,10 @@ class RefreshTokenResource(Resource):
         """Generates a new access token using a valid refresh cookie/token."""
         current_user_id = get_jwt_identity()
         claims = get_jwt()
-        
+
         # Preserve user role from existing refresh token claims
         user_role = claims.get("role", "user")
-        
+
         logger.info("Access token refreshed", user_id=current_user_id)
 
         new_access_token = create_access_token(
@@ -176,10 +176,10 @@ class RefreshTokenResource(Resource):
         )
 
         response = make_response({"message": "Token refreshed successfully"}, 200)
-        
+
         # Set updated access cookie
         set_access_cookies(response, new_access_token)
-        
+
         return response
 
 
