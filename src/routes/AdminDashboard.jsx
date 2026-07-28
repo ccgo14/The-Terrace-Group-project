@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Screen, Header, KindLabel } from "../components/UI";
 import { IconArrowLeft, IconCheck } from "../components/Icons";
-import { articles } from "../data";
+import api from "../api/client";
+import { mapArticle } from "../api/mappers";
 
 const metrics = [
   ["Pending", 7],
@@ -11,7 +13,31 @@ const metrics = [
 ];
 
 export default function Admin() {
-  const queue = articles.slice(0, 4);
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/articles")
+      .then((res) => {
+        if (!cancelled) {
+          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          setQueue(items.map(mapArticle));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to fetch articles:", err);
+          setQueue([]);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Screen>
@@ -54,41 +80,52 @@ export default function Admin() {
           Moderation Queue
         </h2>
 
-        <ul className="border-t border-black/10 dark:border-white/10">
-          {queue.map((a) => (
-            <li
-              key={a.id}
-              className="px-4 py-4 border-b border-black/10 dark:border-white/10 flex items-start gap-3"
-            >
-              <div className="flex-1 min-w-0">
-                <KindLabel>{a.kind}</KindLabel>
-                <p className="mt-2 font-display font-semibold uppercase leading-tight text-night-pitch dark:text-floodlight truncate">
-                  {a.title}
-                </p>
-                <p className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50 mt-1">
-                  {a.author} · {a.time} ago
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 shrink-0">
-                <button
-                  aria-label="Approve"
-                  className="p-2 border border-black/10 dark:border-white/10 rounded-card text-night-pitch dark:text-floodlight
-                  hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch
-                  transition-colors duration-100 active:translate-y-[2px]"
-                >
-                  <IconCheck className="w-4 h-4" />
-                </button>
-                <button
-                  className="px-2 py-1 border border-black/10 dark:border-white/10 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50
-                  hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black
-                  transition-colors duration-100 active:translate-y-[2px]"
-                >
-                  Reject
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {loading ? (
+          <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10">
+            Loading queue...
+          </div>
+        ) : (
+          <ul className="border-t border-black/10 dark:border-white/10">
+            {queue.map((a) => (
+              <li
+                key={a.id}
+                className="px-4 py-4 border-b border-black/10 dark:border-white/10 flex items-start gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <KindLabel>{a.kind}</KindLabel>
+                  <p className="mt-2 font-display font-semibold uppercase leading-tight text-night-pitch dark:text-floodlight truncate">
+                    {a.title}
+                  </p>
+                  <p className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50 mt-1">
+                    {a.author} · {a.time}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <button
+                    aria-label="Approve"
+                    className="p-2 border border-black/10 dark:border-white/10 rounded-card text-night-pitch dark:text-floodlight
+                    hover:bg-night-pitch hover:text-floodlight dark:hover:bg-floodlight dark:hover:text-night-pitch
+                    transition-colors duration-100 active:translate-y-[2px]"
+                  >
+                    <IconCheck className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="px-2 py-1 border border-black/10 dark:border-white/10 rounded-card font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50
+                    hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black
+                    transition-colors duration-100 active:translate-y-[2px]"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </li>
+            ))}
+            {!loading && queue.length === 0 && (
+              <li className="px-4 py-8 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50">
+                Queue is empty.
+              </li>
+            )}
+          </ul>
+        )}
       </main>
     </Screen>
   );

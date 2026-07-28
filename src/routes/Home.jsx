@@ -1,12 +1,40 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Screen, Header } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
 import { LeagueTable } from "../components/Scoreboard";
-import { articles, categories, table } from "../data";
+import { categories, table } from "../data";
+import api from "../api/client";
+import { mapArticle } from "../api/mappers";
 
 export default function HomeFeed() {
   const [activeCategory, setActiveCategory] = useState("ALL");
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/articles")
+      .then((res) => {
+        if (!cancelled) {
+          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          setArticles(items.map(mapArticle));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to fetch articles:", err);
+          setArticles([]);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const categoryNames = useMemo(
     () => ["ALL", ...categories.map((c) => c.name)],
     [],
@@ -17,7 +45,7 @@ export default function HomeFeed() {
     return articles.filter(
       (a) => a.category === activeCategory || a.kind === activeCategory,
     );
-  }, [activeCategory]);
+  }, [activeCategory, articles]);
 
   return (
     <Screen sidebar nav>
@@ -43,7 +71,11 @@ export default function HomeFeed() {
           })}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
+            Loading articles...
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
             No articles match this filter.
           </div>

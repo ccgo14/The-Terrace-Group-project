@@ -1,10 +1,38 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Screen, Header, KindLabel } from "../components/UI";
 import BottomNav from "../components/BottomNav";
-import { categories, articles } from "../data";
+import { articles } from "../data";
+import api from "../api/client";
+import { mapCategory } from "../api/mappers";
 
 export default function Categories() {
+  const [fetchedCategories, setFetchedCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const trending = articles.slice(0, 3);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/categories")
+      .then((res) => {
+        if (!cancelled) {
+          const items = Array.isArray(res.data) ? res.data : [];
+          setFetchedCategories(items.map(mapCategory));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to fetch categories:", err);
+          setFetchedCategories([]);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Screen sidebar nav>
@@ -18,24 +46,30 @@ export default function Categories() {
         </div>
 
         {/* plain hard grid of categories, hairline dividers */}
-        <ul className="border-t border-black/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((c) => (
-            <li key={c.name}>
-              <Link
-                to="/feed"
-                className="flex items-center justify-between px-4 py-4 border-b border-black/10 dark:border-white/10 md:border-r md:last:border-r-0
-                text-night-pitch dark:text-floodlight hover:bg-black/5 dark:hover:bg-white/5
-                transition-colors duration-100">
-                <span className="font-display font-semibold uppercase tracking-wide text-lg min-w-0 truncate">
-                  {c.name}
-                </span>
-                <span className="font-mono text-xs text-terracing/60 dark:text-floodlight/50">
-                  {c.count} posts
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {loading ? (
+          <div className="border-t border-black/10 dark:border-white/10 py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50">
+            Loading categories...
+          </div>
+        ) : (
+          <ul className="border-t border-black/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {fetchedCategories.map((c) => (
+              <li key={c.name}>
+                <Link
+                  to="/feed"
+                  className="flex items-center justify-between px-4 py-4 border-b border-black/10 dark:border-white/10 md:border-r md:last:border-r-0
+                  text-night-pitch dark:text-floodlight hover:bg-black/5 dark:hover:bg-white/5
+                  transition-colors duration-100">
+                  <span className="font-display font-semibold uppercase tracking-wide text-lg min-w-0 truncate">
+                    {c.name}
+                  </span>
+                  <span className="font-mono text-xs text-terracing/60 dark:text-floodlight/50">
+                    {c.count} posts
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <section className="pt-6">
           <h2 className="font-display font-bold uppercase text-lg tracking-wide text-night-pitch dark:text-floodlight mb-3">
