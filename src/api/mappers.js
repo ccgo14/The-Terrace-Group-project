@@ -1,5 +1,5 @@
 export const mapArticle = (a) => ({
-  id: a.article_id,
+  id: a.id,
   title: a.title,
   excerpt: a.content?.length > 120 ? a.content.slice(0, 120) + "…" : a.content,
   kind: a.category?.category_name?.toUpperCase().includes("MATCH")
@@ -14,13 +14,13 @@ export const mapArticle = (a) => ({
 });
 
 export const mapCategory = (c) => ({
-  id: c.category_id,
+  id: c.id,
   name: c.category_name,
   count: c.articles?.length || 0,
 });
 
 export const mapComment = (c) => ({
-  id: c.comment_id,
+  id: c.id,
   body: c.content,
   author: c.user?.username || "Unknown",
   time: c.created_at,
