@@ -61,7 +61,7 @@ export default function PostArticle() {
         cover_image: "",
       };
       const res = await api.post("/articles", payload);
-      navigate(`/articles/${res.data.article_id}`);
+      navigate(`/articles/${res.data.id}`);
     } catch (err) {
       console.error("Failed to create article:", err);
       setError(err.response?.data?.message || "Failed to publish article.");
