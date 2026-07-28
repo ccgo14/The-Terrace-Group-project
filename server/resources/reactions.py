@@ -1,10 +1,11 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from models import db, Reaction, User, Article
-from schemas import reaction_schema, reactions_schema
+from ..models import db, Reaction, User, Article
+from ..schemas import reaction_schema, reactions_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+from ..auth_utils import role_required
 
 # Standard logging fallback
 try:
@@ -19,7 +20,7 @@ class ReactionsResource(Resource):
     # GET /reactions - Public: Fetch all reactions
     def get(self):
         reactions = Reaction.query.all()
-        log.info("get_all_reactions", request_data=reactions_schema.dump(reactions))
+        log.info("get_all_reactions %s", reactions_schema.dump(reactions))
         return make_response(reactions_schema.dump(reactions), 200)
 
     # POST /reactions - Protected: Create a new reaction
@@ -59,7 +60,7 @@ class ReactionsResource(Resource):
             return make_response(reaction_schema.dump(new_reaction), 201)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             response = {
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -69,7 +70,7 @@ class ReactionsResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error("integrity_error: %s", str(ie))
             response = {
                 "status": 409,
                 "message": "Database constraint violation occurred",
@@ -78,7 +79,7 @@ class ReactionsResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             response = {
                 "status": 500,
                 "message": "An error occurred",
@@ -95,7 +96,7 @@ class ArticleReactionsResource(Resource):
             return make_response({"status": 404, "message": "Article not found"}, 404)
 
         reactions = Reaction.query.filter_by(article_id=article_id).all()
-        log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
+        log.info("get_article_%s_reactions %s", article_id, reactions_schema.dump(reactions))
         return make_response(reactions_schema.dump(reactions), 200)
 
 
@@ -143,7 +144,7 @@ class ReactionByIDResource(Resource):
             return make_response(reaction_schema.dump(reaction), 200)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             response = {
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -153,7 +154,7 @@ class ReactionByIDResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error("integrity_error: %s", str(ie))
             response = {
                 "status": 409,
                 "message": "Database constraint violation occurred",
@@ -162,7 +163,7 @@ class ReactionByIDResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             response = {
                 "status": 500,
                 "message": "An error occurred",
@@ -217,7 +218,7 @@ class ReactionUpvoteResource(Resource):
             }, 200)
         except Exception as e:
             db.session.rollback()
-            log.error("upvote_error", error=str(e))
+            log.error("upvote_error: %s", str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -230,6 +231,6 @@ class UserReactionsResource(Resource):
             return make_response({"status": 404, "message": "User not found"}, 404)
 
         reactions = Reaction.query.filter_by(user_id=user_id).all()
-        log.info(f"get_user_{user_id}_reactions", request_data=reactions_schema.dump(reactions))
+        log.info("get_user_%s_reactions %s", user_id, reactions_schema.dump(reactions))
 
         return make_response(reactions_schema.dump(reactions), 200)
