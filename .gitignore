@@ -1,3 +1,9 @@
+# Node / Frontend
+node_modules
+dist
+dist-ssr
+*.local
+
 # Logs
 logs
 *.log
@@ -7,12 +13,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Python / Flask / Backend
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# Editor directories and files
+# SQLite Database & Local Server State
+instance/
+*.db
+*.sqlite3
+
+# Editor directories and system files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,9 +40,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local analysis bundles
+# Local analysis bundles & tools
 repomix-output.xml
+repomix-output.*
 codebase_combined.txt
 Windsurf_Static_UI_Brief.md
-
-repomix-output.*
