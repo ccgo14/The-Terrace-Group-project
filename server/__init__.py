@@ -13,7 +13,7 @@ import structlog
 from flask_sqlalchemy import SQLAlchemy
 
 # Import models & bcrypt from server directory
-from models import db, bcrypt
+from .models import db, bcrypt
 
 # Load environment variables from server/.env explicitly
 env_path = Path(__file__).parent / ".env"
@@ -22,7 +22,7 @@ load_dotenv(env_path)
 # Instantiate extensions (FIXED: db is now an instance)
 cors = CORS()
 jwt = JWTManager()
-#db = SQLAlchemy()
+# db = SQLAlchemy()
 migrate = Migrate()
 
 
@@ -42,7 +42,11 @@ def configure_logging():
             structlog.dev.set_exc_info,
             structlog.processors.TimeStamper(fmt="iso"),
             # ConsoleRenderer for pretty colored output in development
-            structlog.dev.ConsoleRenderer() if os.getenv("FLASK_ENV") != "production" else structlog.processors.JSONRenderer(),
+            (
+                structlog.dev.ConsoleRenderer()
+                if os.getenv("FLASK_ENV") != "production"
+                else structlog.processors.JSONRenderer()
+            ),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
         context_class=dict,
@@ -62,7 +66,10 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Security & JWT Expiry
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-jwt-key")
+    jwt_secret_key = os.getenv("JWT_SECRET_KEY")
+    if not jwt_secret_key:
+        raise RuntimeError("JWT_SECRET_KEY must be configured in the environment")
+    app.config["JWT_SECRET_KEY"] = jwt_secret_key
 
     access_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_MINUTES", 60))
     refresh_days = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", 30))
@@ -84,7 +91,9 @@ def create_app():
     # 0. INITIALIZE LOGGING & MIDDLEWARE
     configure_logging()
     logger = structlog.get_logger()
-    logger.info("Initializing Flask application", env=os.getenv("FLASK_ENV", "development"))
+    logger.info(
+        "Initializing Flask application", env=os.getenv("FLASK_ENV", "development")
+    )
 
     @app.before_request
     def log_request_start():
@@ -122,7 +131,11 @@ def create_app():
     @app.teardown_request
     def log_request_exception(exception=None):
         if exception:
-            logger.error("Unhandled exception during request lifecycle", error=str(exception), exc_info=True)
+            logger.error(
+                "Unhandled exception during request lifecycle",
+                error=str(exception),
+                exc_info=True,
+            )
 
     # 1. INITIALIZE CORS
     frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -208,14 +221,14 @@ def create_app():
 
 def register_routes(api):
     # Import resource classes using absolute/direct imports relative to server directory
-    from resources.auth import (
+    from .resources.auth import (
         RegisterResource,
         LoginResource,
         LogoutResource,
         MeResource,
         RefreshTokenResource,
     )
-    from resources.users import (
+    from .resources.users import (
         UsersResource,
         UserByIDResource,
         UserFollowResource,
@@ -223,42 +236,42 @@ def register_routes(api):
         UserFollowingResource,
         UserStatsResource,
     )
-    from resources.categories import (
+    from .resources.categories import (
         CategoriesResource,
         CategoryByIDResource,
         CategoryArticlesResource,
     )
-    from resources.articles import (
+    from .resources.articles import (
         ArticlesResource,
         ArticleByIDResource,
         ArticleUpvoteResource,
         ArticleCommentsResource,
         UserArticlesResource,
     )
-    from resources.reactions import (
+    from .resources.reactions import (
         ReactionsResource,
         ArticleReactionsResource,
         ReactionByIDResource,
         ReactionUpvoteResource,
         UserReactionsResource,
     )
-    from resources.leagues import LeaguesResource, LeagueByIDResource
-    from resources.teams import TeamsResource, TeamByIDResource
-    from resources.matches import (
+    from .resources.leagues import LeaguesResource, LeagueByIDResource
+    from .resources.teams import TeamsResource, TeamByIDResource
+    from .resources.matches import (
         MatchesResource,
         MatchByIDResource,
         MatchLiveResource,
         MatchEventsResource,
         MatchPredictionsResource,
     )
-    from resources.predictions import (
+    from .resources.predictions import (
         PredictionsResource,
         PredictionByIDResource,
         PredictionResolveResource,
         UserPredictionsResource,
     )
-    from resources.comments import CommentsResource, CommentByIDResource
-    from resources.admin import AdminReportsResource, AdminArticlePublishResource
+    from .resources.comments import CommentsResource, CommentByIDResource
+    from .resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")
