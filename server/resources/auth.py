@@ -1,4 +1,4 @@
-from flask import request, make_response, jsonify
+from flask import request, make_response
 from flask_restful import Resource
 from flask_jwt_extended import (
     create_access_token,
@@ -12,7 +12,8 @@ from flask_jwt_extended import (
 )
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from models import db, User, Profile
+from extensions import db
+from models import User, Profile
 from schemas import user_schema, login_schema, register_schema
 
 
@@ -24,10 +25,17 @@ class RegisterResource(Resource):
             # Validate input using RegisterSchema
             validated_data = register_schema.load(data)
 
-            # Check if username or email already exists
-            if User.query.filter_by(username=validated_data["username"]).first():
-                return make_response({"status": 400, "message": "Username already taken"}, 400)
-            if User.query.filter_by(email=validated_data["email"]).first():
+            # Check if username or email already exists using modern SQLAlchemy select syntax
+            existing_user = db.session.execute(
+                db.select(User).filter(
+                    (User.username == validated_data["username"]) | 
+                    (User.email == validated_data["email"])
+                )
+            ).scalar_one_or_none()
+
+            if existing_user:
+                if existing_user.username == validated_data["username"]:
+                    return make_response({"status": 400, "message": "Username already taken"}, 400)
                 return make_response({"status": 400, "message": "Email already registered"}, 400)
 
             # Create User instance
@@ -44,7 +52,7 @@ class RegisterResource(Resource):
             db.session.add(user)
             db.session.flush()  # Generates user.user_id before committing profile
 
-            # SECURITY FIX: Force default role to 'user' on public registration
+            # Force default role to 'user' on public registration
             assigned_role = "user"
             
             profile = Profile(
@@ -94,7 +102,10 @@ class LoginResource(Resource):
             data = request.get_json() or {}
             validated_data = login_schema.load(data)
 
-            user = User.query.filter_by(email=validated_data["email"]).first()
+            # Modern SQLAlchemy query syntax
+            user = db.session.execute(
+                db.select(User).filter_by(email=validated_data["email"])
+            ).scalar_one_or_none()
 
             # Check user existence and verify hashed password
             if not user or not user.check_password(validated_data["password"]):
