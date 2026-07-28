@@ -4,6 +4,7 @@ import { Screen, Header, KindLabel } from "../components/UI";
 import { IconArrowLeft, IconCheck } from "../components/Icons";
 import api from "../api/client";
 import { mapArticle } from "../api/mappers";
+import { useAuth } from "../context/AuthContext";
 
 const metrics = [
   ["Pending", 7],
@@ -13,10 +14,19 @@ const metrics = [
 ];
 
 export default function Admin() {
+  const { user } = useAuth();
+  const userRole = user?.profile?.role || user?.role;
+  const isAdmin = userRole === "admin";
+
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAdmin) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     api
       .get("/articles")
@@ -37,7 +47,31 @@ export default function Admin() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAdmin]);
+
+  if (!isAdmin) {
+    return (
+      <Screen>
+        <Header
+          title="Admin"
+          left={
+            <Link
+              to="/"
+              className="text-night-pitch dark:text-floodlight block"
+              aria-label="Back"
+            >
+              <IconArrowLeft className="w-6 h-6" />
+            </Link>
+          }
+        />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="py-12 text-center font-mono text-sm text-red-600 dark:text-red-400 border border-black/10 dark:border-white/10 rounded-card">
+            You do not have permission to access this page.
+          </div>
+        </main>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
