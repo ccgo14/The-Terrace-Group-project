@@ -5,7 +5,7 @@ import { Field, Button } from "../components/UI";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-const ROLES = ["User", "Author", "Admin"];
+const ROLES = ["user", "author", "admin"];
 
 const BIO_META = {
   User: {
@@ -59,6 +59,7 @@ export default function CreateAccount() {
         username: form.username,
         email: form.email,
         password: form.password,
+        role: form.role,
       });
 
       localStorage.setItem("token", res.data.token);
