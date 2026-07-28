@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from auth_utils import role_required
+from ..auth_utils import role_required
 
 class AdminReportsResource(Resource):
     @role_required(["admin"])

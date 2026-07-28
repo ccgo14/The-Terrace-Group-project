@@ -1,8 +1,8 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt  # <-- Added get_jwt
-from models import db, Reaction, User, Article
-from schemas import reaction_schema, reactions_schema
+from ..models import db, Reaction, User, Article
+from ..schemas import reaction_schema, reactions_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 

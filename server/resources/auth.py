@@ -12,8 +12,8 @@ from flask_jwt_extended import (
 )
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from models import db, User, Profile
-from schemas import user_schema, login_schema, register_schema
+from ..models import db, User, Profile
+from ..schemas import user_schema, login_schema, register_schema
 
 
 class RegisterResource(Resource):
@@ -73,6 +73,7 @@ class RegisterResource(Resource):
             response = make_response({
                 "message": "User registered successfully",
                 "user": user_schema.dump(user),
+                "token": access_token,
             }, 201)
 
             # Attach HttpOnly JWT cookies to response
@@ -118,6 +119,7 @@ class LoginResource(Resource):
             response = make_response({
                 "message": "Login successful",
                 "user": user_schema.dump(user),
+                "token": access_token,
             }, 200)
 
             # Attach HttpOnly JWT cookies to response

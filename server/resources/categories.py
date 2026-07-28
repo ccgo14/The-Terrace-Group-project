@@ -1,10 +1,10 @@
 from flask import make_response, request
 from flask_restful import Resource
-from models import db, Category
-from schemas import category_schema, categories_schema
+from ..models import db, Category
+from ..schemas import category_schema, categories_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from auth_utils import role_required  # Properly imported!
+from ..auth_utils import role_required  # Properly imported!
 
 # Standard logging fallback
 try:
