@@ -8,7 +8,8 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-import structlog  
+import structlog
+from flask_sqlalchemy import SQLAlchemy  
 
 # Import models & bcrypt from server directory
 from .models import db, bcrypt
@@ -16,9 +17,10 @@ from .models import db, bcrypt
 # Load environment variables from server/.env
 load_dotenv()
 
-# Instantiate extensions
+# Instantiate extensions (FIXED: db is now an instance)
 cors = CORS()
 jwt = JWTManager()
+db = SQLAlchemy()
 migrate = Migrate()
 
 
@@ -173,30 +175,30 @@ def create_app():
 
 def register_routes(api):
     # Import resource classes relative to server structure
-    from resources.auth import (
+    from server.resources.auth import (
         RegisterResource, 
         LoginResource, 
-        LogoutResource,  # Added LogoutResource
+        LogoutResource, 
         MeResource, 
         RefreshTokenResource
     )
-    from resources.users import (
+    from server.resources.users import (
         UsersResource, UserByIDResource, UserFollowResource, 
         UserFollowersResource, UserFollowingResource, UserStatsResource
     )
-    from resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
-    from resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource    
-    from resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
-    from resources.leagues import LeaguesResource, LeagueByIDResource
-    from resources.teams import TeamsResource, TeamByIDResource
-    from resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
-    from resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
-    from resources.admin import AdminReportsResource, AdminArticlePublishResource
+    from server.resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
+    from server.resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource    
+    from server.resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
+    from server.resources.leagues import LeaguesResource, LeagueByIDResource
+    from server.resources.teams import TeamsResource, TeamByIDResource
+    from server.resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
+    from server.resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
+    from server.resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")
     api.add_resource(LoginResource, "/auth/login")
-    api.add_resource(LogoutResource, "/auth/logout")  # Registered logout endpoint
+    api.add_resource(LogoutResource, "/auth/logout") 
     api.add_resource(MeResource, "/auth/me")
     api.add_resource(RefreshTokenResource, "/auth/refresh")
 
