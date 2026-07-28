@@ -28,7 +28,9 @@ export default function PostArticle() {
       .get("/categories")
       .then((res) => {
         if (!cancelled) {
-          const items = Array.isArray(res.data) ? res.data.map(mapCategory) : [];
+          const items = Array.isArray(res.data)
+            ? res.data.map(mapCategory)
+            : [];
           setCategories(items);
           setLoading(false);
         }
@@ -55,12 +57,11 @@ export default function PostArticle() {
       const payload = {
         title: form.title,
         content: form.body,
-        kind: form.kind,
         category_id: form.category_id ? Number(form.category_id) : undefined,
         cover_image: "",
       };
       const res = await api.post("/articles", payload);
-      navigate(`/articles/${res.data.id}`);
+      navigate(`/articles/${res.data.article_id}`);
     } catch (err) {
       console.error("Failed to create article:", err);
       setError(err.response?.data?.message || "Failed to publish article.");
@@ -77,8 +78,7 @@ export default function PostArticle() {
           <Link
             to="/profile/1"
             className="text-night-pitch dark:text-floodlight block"
-            aria-label="Back"
-          >
+            aria-label="Back">
             <IconArrowLeft className="w-6 h-6" />
           </Link>
         }
@@ -100,8 +100,7 @@ export default function PostArticle() {
                   (form.kind === k
                     ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
                     : "bg-transparent text-terracing/70 dark:text-floodlight/50 hover:text-black dark:hover:text-white border-black/10 dark:border-white/10")
-                }
-              >
+                }>
                 {k}
               </button>
             ))}
@@ -115,13 +114,18 @@ export default function PostArticle() {
           <select
             value={form.category_id}
             onChange={(e) => update("category_id", e.target.value)}
-            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50"
-          >
-            <option value="" disabled className="bg-floodlight dark:bg-night-pitch">
+            className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50">
+            <option
+              value=""
+              disabled
+              className="bg-floodlight dark:bg-night-pitch">
               {loading ? "Loading categories..." : "Select a category"}
             </option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id} className="bg-floodlight dark:bg-night-pitch">
+              <option
+                key={c.id}
+                value={c.id}
+                className="bg-floodlight dark:bg-night-pitch">
                 {c.name}
               </option>
             ))}
@@ -163,14 +167,18 @@ export default function PostArticle() {
         </label>
 
         {error && (
-          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">
+            {error}
+          </p>
         )}
 
         <div className="flex gap-3">
           <Button variant="outline" type="button" disabled={submitting}>
             Save Draft
           </Button>
-          <Button type="submit" disabled={submitting || !form.title || !form.body}>
+          <Button
+            type="submit"
+            disabled={submitting || !form.title || !form.body}>
             Publish
           </Button>
         </div>

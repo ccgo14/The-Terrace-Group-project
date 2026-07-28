@@ -7,7 +7,7 @@ import { liveMatch, reactions } from "../data";
 import MatchPredictor from "../components/MatchPredictor";
 import CommentSection from "../components/CommentSection";
 import api from "../api/client";
-import { mapArticle } from "../api/mappers";
+import { mapArticle, mapComment } from "../api/mappers";
 
 export default function ArticleDetail() {
   const { id } = useParams();
@@ -100,7 +100,7 @@ export default function ArticleDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
           <article className="lg:col-span-2">
-              <div className="w-full h-64 overflow-hidden bg-terracing/20 dark:bg-terracing/40">
+            <div className="w-full h-64 overflow-hidden bg-terracing/20 dark:bg-terracing/40">
               <img
                 src={article.image || "/placeholder.svg"}
                 alt={article.title}
@@ -164,19 +164,21 @@ export default function ArticleDetail() {
               </h2>
               <ul className="mt-3">
                 {reactions.map((r, i) => (
-                  <li key={i} className="py-4 border-b border-black/10 dark:border-white/10">
+                  <li
+                    key={i}
+                    className="py-4 border-b border-black/10 dark:border-white/10">
                     <div className="flex items-center gap-2">
                       <img
                         src="/images/avatar.png"
                         alt=""
                         className="w-7 h-7 rounded-full object-cover bg-terracing/30"
                       />
-                       <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight min-w-0 truncate">
-                         {r.author}
-                       </span>
-                       <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
-                         {r.time}
-                       </span>
+                      <span className="font-display font-semibold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight min-w-0 truncate">
+                        {r.author}
+                      </span>
+                      <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
+                        {r.time}
+                      </span>
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-night-pitch dark:text-floodlight/80">
                       {r.body}
