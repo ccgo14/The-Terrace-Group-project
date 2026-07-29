@@ -38,7 +38,8 @@ class ArticlesResource(Resource):
             query = query.filter_by(category_id=category_id)
 
         articles = query.all()
-        log.info("get_all_articles", count=len(articles))
+        # FIXED: Replaced keyword argument with standard f-string formatting
+        log.info(f"get_all_articles count={len(articles)}")
         return make_response(articles_schema.dump(articles), 200)
 
     # POST /articles - Protected: Create a new article (Admin/Author only)
@@ -78,7 +79,7 @@ class ArticlesResource(Resource):
             return make_response(article_schema.dump(new_article), 201)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error(f"validation_error: {err.messages}")
             return make_response(
                 {
                     "status": 400,
@@ -90,7 +91,7 @@ class ArticlesResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error(f"integrity_error: {str(ie)}")
             return make_response(
                 {"status": 409, "message": "Database constraint violation occurred"},
                 409,
@@ -98,7 +99,7 @@ class ArticlesResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error(f"unexpected_error: {str(e)}")
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -145,7 +146,7 @@ class ArticleByIDResource(Resource):
             return make_response(article_schema.dump(article), 200)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error(f"validation_error: {err.messages}")
             return make_response(
                 {
                     "status": 400,
@@ -157,7 +158,7 @@ class ArticleByIDResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error(f"integrity_error: {str(ie)}")
             return make_response(
                 {"status": 409, "message": "Database constraint violation occurred"},
                 409,
@@ -165,7 +166,7 @@ class ArticleByIDResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error(f"unexpected_error: {str(e)}")
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
     # DELETE /articles/<int:article_id> - Protected: Delete article (Owner or Admin)
@@ -194,7 +195,7 @@ class ArticleByIDResource(Resource):
             return make_response({"message": "Article deleted successfully"}, 200)
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error(f"unexpected_error: {str(e)}")
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -213,7 +214,7 @@ class ArticleUpvoteResource(Resource):
             return make_response(article_schema.dump(article), 200)
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error(f"unexpected_error: {str(e)}")
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -255,7 +256,7 @@ class ArticleCommentsResource(Resource):
             return make_response(comment_schema.dump(new_comment), 201)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error(f"validation_error: {err.messages}")
             return make_response(
                 {
                     "status": 400,
@@ -267,7 +268,7 @@ class ArticleCommentsResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error(f"unexpected_error: {str(e)}")
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 

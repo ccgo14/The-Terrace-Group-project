@@ -9,12 +9,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+
+    // Check for missing or invalid token strings (e.g. "null" or "undefined")
+    if (!token || token === "null" || token === "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       setLoading(false);
       return;
     }
 
     let cancelled = false;
+
     api
       .get("/auth/me")
       .then((res) => {
@@ -25,16 +30,21 @@ export function AuthProvider({ children }) {
       })
       .catch((err) => {
         if (!cancelled) {
-          console.error("Auth check failed:", err);
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setUser(null);
-          setLoading(false);
-          if (err.response?.status === 401) {
-            window.location.href = "/login";
+          const status = err.response?.status;
+
+          // If the token is invalid (422) or unauthorized (401), clear the session cleanly
+          if (status === 401 || status === 422) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            setUser(null);
+          } else {
+            console.error("Auth check failed:", err);
           }
+
+          setLoading(false);
         }
-      })
+      });
+
     return () => {
       cancelled = true;
     };
