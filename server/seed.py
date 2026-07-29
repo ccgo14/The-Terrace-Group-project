@@ -1,26 +1,32 @@
+import os
+import sys
 from datetime import datetime, timedelta
-from app import app
-from extensions import db
-from models import (
-    User,
-    Profile,
-    Article,
-    Comment,
-    Category,
-    Reaction,
-    Follow,
-    League,
-    Team,
-    Match,
-    Prediction,
-)
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from flask_bcrypt import Bcrypt
 
+from server import create_app
+from server.extensions import db
+from server.models import (
+    Article,
+    Category,
+    Comment,
+    Follow,
+    League,
+    Match,
+    Prediction,
+    Profile,
+    Reaction,
+    Team,
+    User,
+)
+
 bcrypt = Bcrypt()
+app = create_app()
 
 with app.app_context():
     print("🌱 Clearing existing data...")
-    # Clear tables in order to avoid foreign key constraint violations
     Prediction.query.delete()
     Reaction.query.delete()
     Comment.query.delete()
@@ -35,15 +41,41 @@ with app.app_context():
     db.session.commit()
 
     print("⚽ Seeding Leagues and Teams...")
-    epl = League(name="English Premier League", country="England", logo_url="https://placeholder.com/epl.png")
-    laliga = League(name="La Liga", country="Spain", logo_url="https://placeholder.com/laliga.png")
+    epl = League(
+        name="English Premier League",
+        country="England",
+        logo_url="https://placeholder.com/epl.png",
+    )
+    laliga = League(
+        name="La Liga", country="Spain", logo_url="https://placeholder.com/laliga.png"
+    )
     db.session.add_all([epl, laliga])
     db.session.commit()
 
-    arsenal = Team(name="Arsenal", short_code="ARS", logo_url="https://placeholder.com/ars.png", league_id=epl.id)
-    chelsea = Team(name="Chelsea", short_code="CHE", logo_url="https://placeholder.com/che.png", league_id=epl.id)
-    real_madrid = Team(name="Real Madrid", short_code="RMA", logo_url="https://placeholder.com/rma.png", league_id=laliga.id)
-    barcelona = Team(name="Barcelona", short_code="BAR", logo_url="https://placeholder.com/bar.png", league_id=laliga.id)
+    arsenal = Team(
+        name="Arsenal",
+        short_code="ARS",
+        logo_url="https://placeholder.com/ars.png",
+        league_id=epl.id,
+    )
+    chelsea = Team(
+        name="Chelsea",
+        short_code="CHE",
+        logo_url="https://placeholder.com/che.png",
+        league_id=epl.id,
+    )
+    real_madrid = Team(
+        name="Real Madrid",
+        short_code="RMA",
+        logo_url="https://placeholder.com/rma.png",
+        league_id=laliga.id,
+    )
+    barcelona = Team(
+        name="Barcelona",
+        short_code="BAR",
+        logo_url="https://placeholder.com/bar.png",
+        league_id=laliga.id,
+    )
     db.session.add_all([arsenal, chelsea, real_madrid, barcelona])
     db.session.commit()
 
@@ -56,7 +88,7 @@ with app.app_context():
         status="FINISHED",
         home_score=2,
         away_score=1,
-        minute="90'"
+        minute="90'",
     )
     match2 = Match(
         league_id=laliga.id,
@@ -66,13 +98,12 @@ with app.app_context():
         status="UPCOMING",
         home_score=None,
         away_score=None,
-        minute=None
+        minute=None,
     )
     db.session.add_all([match1, match2])
     db.session.commit()
 
     print("👤 Seeding Users & Profiles...")
-    # Generate hashed password securely
     default_password_hash = bcrypt.generate_password_hash("password123").decode("utf-8")
 
     user1 = User(
@@ -80,38 +111,60 @@ with app.app_context():
         last_name="Wanja",
         username="jadyn_w",
         email="jadyn@theterrace.com",
-        password_hash=default_password_hash
+        password_hash=default_password_hash,
     )
     user2 = User(
         first_name="Frank",
         last_name="Wanyeki",
         username="frank_w",
         email="frank@theterrace.com",
-        password_hash=default_password_hash
+        password_hash=default_password_hash,
     )
     user3 = User(
         first_name="Emmanuel",
         last_name="Pneuma",
         username="emmanuel_p",
         email="emmanuel@theterrace.com",
-        password_hash=default_password_hash
+        password_hash=default_password_hash,
     )
     db.session.add_all([user1, user2, user3])
     db.session.commit()
 
-    profile1 = Profile(gender="Female", bio="Football analyst and die-hard Arsenal fan.", role="admin", user_id=user1.user_id)
-    profile2 = Profile(gender="Male", bio="La Liga enthusiast and tactical writer.", role="author", user_id=user2.user_id)
-    profile3 = Profile(gender="Male", bio="Casual sports fan and match predictor.", role="user", user_id=user3.user_id)
+    profile1 = Profile(
+        gender="Female",
+        bio="Football analyst and die-hard Arsenal fan.",
+        role="admin",
+        user_id=user1.user_id,
+    )
+    profile2 = Profile(
+        gender="Male",
+        bio="La Liga enthusiast and tactical writer.",
+        role="author",
+        user_id=user2.user_id,
+    )
+    profile3 = Profile(
+        gender="Male",
+        bio="Casual sports fan and match predictor.",
+        role="user",
+        user_id=user3.user_id,
+    )
     db.session.add_all([profile1, profile2, profile3])
     db.session.commit()
 
     print("🏷️ Seeding Categories...")
-    cat_tactics = Category(category_name="Tactics & Analysis", icon="fa-chart-line", description="Deep dive into team structures and game plans.")
-    cat_transfers = Category(category_name="Transfer News", icon="fa-exchange-alt", description="Latest updates on player movements.")
+    cat_tactics = Category(
+        category_name="Tactics & Analysis",
+        icon="fa-chart-line",
+        description="Deep dive into team structures and game plans.",
+    )
+    cat_transfers = Category(
+        category_name="Transfer News",
+        icon="fa-exchange-alt",
+        description="Latest updates on player movements.",
+    )
     db.session.add_all([cat_tactics, cat_transfers])
     db.session.commit()
 
-    # User category follows
     user1.followed_categories.append(cat_tactics)
     user2.followed_categories.append(cat_transfers)
     db.session.commit()
@@ -124,7 +177,7 @@ with app.app_context():
         likes_count=15,
         author_id=user1.user_id,
         category_id=cat_tactics.category_id,
-        published_at=datetime.utcnow() - timedelta(hours=12)
+        published_at=datetime.utcnow() - timedelta(hours=12),
     )
     db.session.add(article1)
     db.session.commit()
@@ -132,13 +185,13 @@ with app.app_context():
     comment1 = Comment(
         content="Fantastic analysis! The midfield block made all the difference.",
         user_id=user2.user_id,
-        article_id=article1.article_id
+        article_id=article1.article_id,
     )
     reaction1 = Reaction(
         body="Spot on!",
         reaction_type="LIKE",
         user_id=user3.user_id,
-        article_id=article1.article_id
+        article_id=article1.article_id,
     )
     db.session.add_all([comment1, reaction1])
     db.session.commit()
@@ -150,7 +203,7 @@ with app.app_context():
         predicted_home_score=2,
         predicted_away_score=1,
         status="CORRECT",
-        points_awarded=3
+        points_awarded=3,
     )
     pred2 = Prediction(
         user_id=user2.user_id,
@@ -158,7 +211,7 @@ with app.app_context():
         predicted_home_score=1,
         predicted_away_score=1,
         status="PENDING",
-        points_awarded=0
+        points_awarded=0,
     )
     db.session.add_all([pred1, pred2])
     db.session.commit()

@@ -9,8 +9,8 @@ import { IconUpvote, IconComment, IconSun, IconMoon } from "./Icons";
 // Add `nav` to any <Screen> that renders <BottomNav /> inside it.
 export function Screen({
   children,
-  scroll = true,
-  auth = false,
+  scroll: _scroll = true,
+  auth: _auth = false,
   sidebar = false,
   nav = false,
 }) {

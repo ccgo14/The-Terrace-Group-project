@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Screen, Header, KindLabel } from "../components/UI";
+import { Skeleton } from "../components/Skeleton";
 import BottomNav from "../components/BottomNav";
 import { articles } from "../data";
 import api from "../api/client";
@@ -47,8 +48,13 @@ export default function Categories() {
 
         {/* plain hard grid of categories, hairline dividers */}
         {loading ? (
-          <div className="border-t border-black/10 dark:border-white/10 py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50">
-            Loading categories...
+          <div className="border-t border-black/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="px-4 py-4 border-b border-black/10 dark:border-white/10 md:border-r md:last:border-r-0">
+                <Skeleton className="w-3/4 h-5 mb-2" />
+                <Skeleton className="w-16 h-4" />
+              </div>
+            ))}
           </div>
         ) : (
           <ul className="border-t border-black/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">

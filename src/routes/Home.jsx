@@ -3,6 +3,7 @@ import { Screen, Header } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
 import { LeagueTable } from "../components/Scoreboard";
+import { Skeleton } from "../components/Skeleton";
 import { categories, table } from "../data";
 import api from "../api/client";
 import { mapArticle } from "../api/mappers";
@@ -72,8 +73,18 @@ export default function HomeFeed() {
         </div>
 
         {loading ? (
-          <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
-            Loading articles...
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-col border border-black/10 dark:border-white/10 rounded-card overflow-hidden">
+                <Skeleton className="w-full h-40 rounded-none" />
+                <div className="px-4 py-4 flex flex-col gap-3 flex-grow bg-white/80 dark:bg-terracing/40">
+                  <Skeleton className="w-16 h-4" />
+                  <Skeleton className="w-full h-6" />
+                  <Skeleton className="w-3/4 h-4" />
+                  <Skeleton className="w-20 h-4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">

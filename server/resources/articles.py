@@ -1,17 +1,29 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from models import db, Article, User, Category
-from schemas import article_schema, articles_schema, comments_schema, comment_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from auth_utils import role_required
+
+try:
+    from server.models import db, Article, User, Category, Comment
+    from server.schemas import (
+        article_schema,
+        articles_schema,
+        comments_schema,
+        comment_schema,
+    )
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, Article, User, Category, Comment
+    from schemas import article_schema, articles_schema, comments_schema, comment_schema
+    from auth_utils import role_required
 
 # Standard logging fallback
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
+
     log = logging.getLogger(__name__)
 
 
@@ -36,27 +48,27 @@ class ArticlesResource(Resource):
             current_user_id = int(get_jwt_identity())
             data = request.get_json() or {}
 
-            # Assign user_id from token to prevent spoofing
             data["user_id"] = current_user_id
-
-            # Validate and deserialize via Marshmallow
             validated_data = article_schema.load(data)
 
-            # Verify foreign key existence
             if not User.query.filter_by(user_id=current_user_id).first():
                 return make_response({"status": 404, "message": "User not found"}, 404)
-            
+
             if "category_id" in validated_data and validated_data["category_id"]:
-                if not Category.query.filter_by(category_id=validated_data["category_id"]).first():
-                    return make_response({"status": 404, "message": "Category not found"}, 404)
+                if not Category.query.filter_by(
+                    category_id=validated_data["category_id"]
+                ).first():
+                    return make_response(
+                        {"status": 404, "message": "Category not found"}, 404
+                    )
 
             new_article = Article(
                 title=validated_data.get("title"),
                 content=validated_data.get("content"),
-                image_url=validated_data.get("image_url"),
-                status=validated_data.get("status", "draft"),
-                upvotes=validated_data.get("upvotes", 0),
-                user_id=current_user_id,
+                cover_image=validated_data.get("cover_image"),
+                view_count=validated_data.get("view_count", 0),
+                likes_count=validated_data.get("likes_count", 0),
+                author_id=current_user_id,
                 category_id=validated_data.get("category_id"),
             )
 
@@ -67,12 +79,22 @@ class ArticlesResource(Resource):
 
         except ValidationError as err:
             log.error("validation_error", errors=err.messages)
-            return make_response({"status": 400, "message": "Validation error(s) occurred", "errors": {**err.messages}}, 400)
+            return make_response(
+                {
+                    "status": 400,
+                    "message": "Validation error(s) occurred",
+                    "errors": {**err.messages},
+                },
+                400,
+            )
 
         except IntegrityError as ie:
             db.session.rollback()
             log.error("integrity_error", error=str(ie))
-            return make_response({"status": 409, "message": "Database constraint violation occurred"}, 409)
+            return make_response(
+                {"status": 409, "message": "Database constraint violation occurred"},
+                409,
+            )
 
         except Exception as e:
             db.session.rollback()
@@ -100,13 +122,18 @@ class ArticleByIDResource(Resource):
         if not article:
             return make_response({"status": 404, "message": "Article not found"}, 404)
 
-        # Authorization: Owner or Admin only
-        if article.user_id != current_user_id and user_role != "admin":
-            return make_response({"status": 403, "message": "Permission denied: Cannot edit this article"}, 403)
+        if article.author_id != current_user_id and user_role != "admin":
+            return make_response(
+                {
+                    "status": 403,
+                    "message": "Permission denied: Cannot edit this article",
+                },
+                403,
+            )
 
         try:
             data = request.get_json() or {}
-            data.pop("user_id", None)  # Prevent user_id tampering
+            data.pop("user_id", None)
 
             validated_data = article_schema.load(data, partial=True)
 
@@ -119,12 +146,22 @@ class ArticleByIDResource(Resource):
 
         except ValidationError as err:
             log.error("validation_error", errors=err.messages)
-            return make_response({"status": 400, "message": "Validation error(s) occurred", "errors": {**err.messages}}, 400)
+            return make_response(
+                {
+                    "status": 400,
+                    "message": "Validation error(s) occurred",
+                    "errors": {**err.messages},
+                },
+                400,
+            )
 
         except IntegrityError as ie:
             db.session.rollback()
             log.error("integrity_error", error=str(ie))
-            return make_response({"status": 409, "message": "Database constraint violation occurred"}, 409)
+            return make_response(
+                {"status": 409, "message": "Database constraint violation occurred"},
+                409,
+            )
 
         except Exception as e:
             db.session.rollback()
@@ -142,8 +179,14 @@ class ArticleByIDResource(Resource):
         if not article:
             return make_response({"status": 404, "message": "Article not found"}, 404)
 
-        if article.user_id != current_user_id and user_role != "admin":
-            return make_response({"status": 403, "message": "Permission denied: Cannot delete this article"}, 403)
+        if article.author_id != current_user_id and user_role != "admin":
+            return make_response(
+                {
+                    "status": 403,
+                    "message": "Permission denied: Cannot delete this article",
+                },
+                403,
+            )
 
         try:
             db.session.delete(article)
@@ -165,7 +208,7 @@ class ArticleUpvoteResource(Resource):
             return make_response({"status": 404, "message": "Article not found"}, 404)
 
         try:
-            article.upvotes = (article.upvotes or 0) + 1
+            article.likes_count = (article.likes_count or 0) + 1
             db.session.commit()
             return make_response(article_schema.dump(article), 200)
         except Exception as e:
@@ -200,10 +243,8 @@ class ArticleCommentsResource(Resource):
 
             validated_data = comment_schema.load(data)
 
-            # Import Comment model locally to avoid circular dependencies if needed
-            from models import Comment
             new_comment = Comment(
-                body=validated_data.get("body"),
+                content=validated_data.get("content"),
                 user_id=current_user_id,
                 article_id=article_id,
             )
@@ -215,7 +256,14 @@ class ArticleCommentsResource(Resource):
 
         except ValidationError as err:
             log.error("validation_error", errors=err.messages)
-            return make_response({"status": 400, "message": "Validation error(s) occurred", "errors": {**err.messages}}, 400)
+            return make_response(
+                {
+                    "status": 400,
+                    "message": "Validation error(s) occurred",
+                    "errors": {**err.messages},
+                },
+                400,
+            )
 
         except Exception as e:
             db.session.rollback()
@@ -231,5 +279,5 @@ class UserArticlesResource(Resource):
         if not user:
             return make_response({"status": 404, "message": "User not found"}, 404)
 
-        articles = Article.query.filter_by(user_id=user_id).all()
+        articles = Article.query.filter_by(author_id=user_id).all()
         return make_response(articles_schema.dump(articles), 200)

@@ -10,7 +10,7 @@ export default function MyComments() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const userId = user?.id;
+  const userId = user?.id || user?.user_id;
 
   useEffect(() => {
     if (!userId) {

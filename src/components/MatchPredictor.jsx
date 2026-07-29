@@ -13,7 +13,7 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
   const [communityPercentage, _setCommunityPercentage] = useState(45);
 
   const { user } = useAuth();
-  const currentUserId = user?.id;
+  const currentUserId = user?.id || user?.user_id;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +29,8 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         match_id: matchId,
         predicted_home_score: Number(homeScore),
         predicted_away_score: Number(awayScore),
+        reaction_type,
+        body,
       });
       setHomeScore("");
       setAwayScore("");
@@ -64,7 +66,9 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
             className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-center font-mono font-bold text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 placeholder:text-terracing/40 dark:placeholder:text-floodlight/40"
             required
           />
-          <span className="text-terracing/60 dark:text-floodlight/50 font-mono font-bold">-</span>
+          <span className="text-terracing/60 dark:text-floodlight/50 font-mono font-bold">
+            -
+          </span>
           <input
             type="number"
             placeholder="Away"
@@ -82,8 +86,7 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
           onChange={function (e) {
             setReaction_type(e.target.value);
           }}
-          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 appearance-none"
-        >
+          className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card p-3 text-sm text-night-pitch dark:text-floodlight font-body focus:outline-none focus:border-black/50 dark:focus:border-white/50 transition-colors duration-100 appearance-none">
           <option value="Home Win">Home Win</option>
           <option value="Away Win">Away Win</option>
           <option value="Draw">Draw</option>
@@ -100,7 +103,9 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         />
 
         {error && (
-          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm font-mono text-center text-red-600 dark:text-red-400">
+            {error}
+          </p>
         )}
 
         {!currentUserId && (
@@ -112,8 +117,7 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         <button
           type="submit"
           disabled={submitting || !currentUserId || !matchId}
-          className="w-full bg-black text-white border-black rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:opacity-90 dark:bg-white dark:text-black dark:border-white transition-colors duration-100 active:translate-y-[2px] disabled:opacity-40"
-        >
+          className="w-full bg-black text-white border-black rounded-card py-3 font-display font-semibold uppercase tracking-wide hover:opacity-90 dark:bg-white dark:text-black dark:border-white transition-colors duration-100 active:translate-y-[2px] disabled:opacity-40">
           Submit Prediction
         </button>
       </form>

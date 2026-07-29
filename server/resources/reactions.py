@@ -1,16 +1,24 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from models import db, Reaction, User, Article
-from schemas import reaction_schema, reactions_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
+try:
+    from server.models import db, Reaction, User, Article
+    from server.schemas import reaction_schema, reactions_schema
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, Reaction, User, Article
+    from schemas import reaction_schema, reactions_schema
+    from auth_utils import role_required
+
 # Standard logging fallback
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
+
     log = logging.getLogger(__name__)
 
 
@@ -19,7 +27,7 @@ class ReactionsResource(Resource):
     # GET /reactions - Public: Fetch all reactions
     def get(self):
         reactions = Reaction.query.all()
-        log.info("get_all_reactions", request_data=reactions_schema.dump(reactions))
+        log.info("get_all_reactions %s", reactions_schema.dump(reactions))
         return make_response(reactions_schema.dump(reactions), 200)
 
     # POST /reactions - Protected: Create a new reaction
@@ -29,23 +37,18 @@ class ReactionsResource(Resource):
             current_user_id = int(get_jwt_identity())
             data = request.get_json() or {}
 
-            # Set user_id from token to prevent identity spoofing
             data["user_id"] = current_user_id
-
-            # Validate and deserialize input using Marshmallow schema
             validated_data = reaction_schema.load(data)
 
-            # Foreign key existence checks
             if not User.query.filter_by(user_id=current_user_id).first():
-                return make_response(
-                    {"status": 404, "message": "User not found"}, 404
-                )
-            if not Article.query.filter_by(article_id=validated_data["article_id"]).first():
+                return make_response({"status": 404, "message": "User not found"}, 404)
+            if not Article.query.filter_by(
+                article_id=validated_data["article_id"]
+            ).first():
                 return make_response(
                     {"status": 404, "message": "Article not found"}, 404
                 )
 
-            # Create new Reaction instance
             new_reaction = Reaction(
                 body=validated_data.get("body"),
                 reaction_type=validated_data.get("reaction_type"),
@@ -59,7 +62,7 @@ class ReactionsResource(Resource):
             return make_response(reaction_schema.dump(new_reaction), 201)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             response = {
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -69,7 +72,7 @@ class ReactionsResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error("integrity_error: %s", str(ie))
             response = {
                 "status": 409,
                 "message": "Database constraint violation occurred",
@@ -78,12 +81,27 @@ class ReactionsResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             response = {
                 "status": 500,
                 "message": "An error occurred",
             }
             return make_response(response, 500)
+
+
+# /articles/<int:article_id>/reactions
+class ArticleReactionsResource(Resource):
+    # GET /articles/<int:article_id>/reactions - Public: Fetch all reactions for an article
+    def get(self, article_id):
+        article = Article.query.filter_by(article_id=article_id).first()
+        if not article:
+            return make_response({"status": 404, "message": "Article not found"}, 404)
+
+        reactions = Reaction.query.filter_by(article_id=article_id).all()
+        log.info(
+            "get_article_%s_reactions %s", article_id, reactions_schema.dump(reactions)
+        )
+        return make_response(reactions_schema.dump(reactions), 200)
 
 
 # /reactions/<int:reaction_id>
@@ -107,19 +125,18 @@ class ReactionByIDResource(Resource):
         if not reaction:
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
-        # Ownership verification
         if reaction.user_id != current_user_id:
             return make_response(
-                {"status": 403, "message": "Permission denied: You can only edit your own reactions"}, 403
+                {
+                    "status": 403,
+                    "message": "Permission denied: You can only edit your own reactions",
+                },
+                403,
             )
 
         try:
             data = request.get_json() or {}
-
-            # Prevent client from altering user_id
             data.pop("user_id", None)
-
-            # Validate input partially for PATCH
             validated_data = reaction_schema.load(data, partial=True)
 
             for key, value in validated_data.items():
@@ -130,7 +147,7 @@ class ReactionByIDResource(Resource):
             return make_response(reaction_schema.dump(reaction), 200)
 
         except ValidationError as err:
-            log.error("validation_error", errors=err.messages)
+            log.error("validation_error: %s", err.messages)
             response = {
                 "status": 400,
                 "message": "Validation error(s) occurred",
@@ -140,7 +157,7 @@ class ReactionByIDResource(Resource):
 
         except IntegrityError as ie:
             db.session.rollback()
-            log.error("integrity_error", error=str(ie))
+            log.error("integrity_error: %s", str(ie))
             response = {
                 "status": 409,
                 "message": "Database constraint violation occurred",
@@ -149,7 +166,7 @@ class ReactionByIDResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("unexpected_error: %s", str(e))
             response = {
                 "status": 500,
                 "message": "An error occurred",
@@ -160,7 +177,7 @@ class ReactionByIDResource(Resource):
     @jwt_required()
     def delete(self, reaction_id):
         current_user_id = int(get_jwt_identity())
-        claims = get_jwt()  # Get custom claims (role) from JWT token
+        claims = get_jwt()
         user_role = claims.get("role", "user")
 
         reaction = Reaction.query.filter_by(reaction_id=reaction_id).first()
@@ -168,10 +185,13 @@ class ReactionByIDResource(Resource):
         if not reaction:
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
-        # Allow deletion if the user is the OWNER OR an ADMIN
         if reaction.user_id != current_user_id and user_role != "admin":
             return make_response(
-                {"status": 403, "message": "Permission denied: You cannot delete this reaction"}, 403
+                {
+                    "status": 403,
+                    "message": "Permission denied: You cannot delete this reaction",
+                },
+                403,
             )
 
         try:
@@ -199,7 +219,7 @@ class ReactionUpvoteResource(Resource):
             return make_response(reaction_schema.dump(reaction), 200)
         except Exception as e:
             db.session.rollback()
-            log.error("unexpected_error", error=str(e))
+            log.error("upvote_error: %s", str(e))
             return make_response({"status": 500, "message": "An error occurred"}, 500)
 
 
@@ -212,20 +232,6 @@ class UserReactionsResource(Resource):
             return make_response({"status": 404, "message": "User not found"}, 404)
 
         reactions = Reaction.query.filter_by(user_id=user_id).all()
-        log.info(f"get_user_{user_id}_reactions", request_data=reactions_schema.dump(reactions))
-
-        return make_response(reactions_schema.dump(reactions), 200)
-
-
-# /articles/<int:article_id>/reactions
-class ArticleReactionsResource(Resource):
-    # GET /articles/<int:article_id>/reactions - Public: Fetch all reactions belonging to a specific article
-    def get(self, article_id):
-        article = Article.query.filter_by(article_id=article_id).first()
-        if not article:
-            return make_response({"status": 404, "message": "Article not found"}, 404)
-
-        reactions = Reaction.query.filter_by(article_id=article_id).all()
-        log.info(f"get_article_{article_id}_reactions", request_data=reactions_schema.dump(reactions))
+        log.info("get_user_%s_reactions %s", user_id, reactions_schema.dump(reactions))
 
         return make_response(reactions_schema.dump(reactions), 200)
