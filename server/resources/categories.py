@@ -1,16 +1,23 @@
 from flask import make_response, request
 from flask_restful import Resource
-from ..models import db, Category, Article
-from ..schemas import category_schema, categories_schema, articles_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from ..auth_utils import role_required  # Properly imported!
+
+try:
+    from server.models import db, Category
+    from server.schemas import category_schema, categories_schema, articles_schema
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, Category
+    from schemas import category_schema, categories_schema, articles_schema
+    from auth_utils import role_required
 
 # Standard logging fallback
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
+
     log = logging.getLogger(__name__)
 
 
@@ -27,17 +34,15 @@ class CategoriesResource(Resource):
     def post(self):
         try:
             data = request.get_json() or {}
-
-            # Validate and deserialize input using Marshmallow schema
             validated_data = category_schema.load(data)
 
-            # Check for duplicate category name before inserting
-            if Category.query.filter_by(category_name=validated_data["category_name"]).first():
+            if Category.query.filter_by(
+                category_name=validated_data["category_name"]
+            ).first():
                 return make_response(
                     {"status": 409, "message": "Category name already exists"}, 409
                 )
 
-            # Create new Category instance
             new_category = Category(
                 category_name=validated_data["category_name"],
                 icon=validated_data.get("icon"),
@@ -99,8 +104,6 @@ class CategoryByIDResource(Resource):
 
         try:
             data = request.get_json() or {}
-
-            # partial=True allows selective field updates for PATCH
             validated_data = category_schema.load(data, partial=True)
 
             for key, value in validated_data.items():
@@ -150,7 +153,9 @@ class CategoryByIDResource(Resource):
             except Exception as e:
                 db.session.rollback()
                 log.error("unexpected_error", error=str(e))
-                return make_response({"status": 500, "message": "An error occurred"}, 500)
+                return make_response(
+                    {"status": 500, "message": "An error occurred"}, 500
+                )
 
         response = {"status": 404, "message": "Category not found"}
         return make_response(response, 404)
@@ -161,8 +166,11 @@ class CategoryArticlesResource(Resource):
     # GET /categories/<int:category_id>/articles - Public: Fetch all articles belonging to a specific category
     def get(self, category_id):
         category = Category.query.filter_by(category_id=category_id).first()
+
         if not category:
             return make_response({"status": 404, "message": "Category not found"}, 404)
 
-        articles = Article.query.filter_by(category_id=category_id).all()
+        articles = getattr(category, "articles", [])
+        log.info("get_category_articles", category_id=category_id, count=len(articles))
+
         return make_response(articles_schema.dump(articles), 200)

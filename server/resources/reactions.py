@@ -1,17 +1,24 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from ..models import db, Reaction, User, Article
-from ..schemas import reaction_schema, reactions_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from ..auth_utils import role_required
+
+try:
+    from server.models import db, Reaction, User, Article
+    from server.schemas import reaction_schema, reactions_schema
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, Reaction, User, Article
+    from schemas import reaction_schema, reactions_schema
+    from auth_utils import role_required
 
 # Standard logging fallback
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
+
     log = logging.getLogger(__name__)
 
 
@@ -30,23 +37,18 @@ class ReactionsResource(Resource):
             current_user_id = int(get_jwt_identity())
             data = request.get_json() or {}
 
-            # Set user_id from token to prevent identity spoofing
             data["user_id"] = current_user_id
-
-            # Validate and deserialize input using Marshmallow schema
             validated_data = reaction_schema.load(data)
 
-            # Foreign key existence checks
             if not User.query.filter_by(user_id=current_user_id).first():
-                return make_response(
-                    {"status": 404, "message": "User not found"}, 404
-                )
-            if not Article.query.filter_by(article_id=validated_data["article_id"]).first():
+                return make_response({"status": 404, "message": "User not found"}, 404)
+            if not Article.query.filter_by(
+                article_id=validated_data["article_id"]
+            ).first():
                 return make_response(
                     {"status": 404, "message": "Article not found"}, 404
                 )
 
-            # Create new Reaction instance
             new_reaction = Reaction(
                 body=validated_data.get("body"),
                 reaction_type=validated_data.get("reaction_type"),
@@ -96,7 +98,9 @@ class ArticleReactionsResource(Resource):
             return make_response({"status": 404, "message": "Article not found"}, 404)
 
         reactions = Reaction.query.filter_by(article_id=article_id).all()
-        log.info("get_article_%s_reactions %s", article_id, reactions_schema.dump(reactions))
+        log.info(
+            "get_article_%s_reactions %s", article_id, reactions_schema.dump(reactions)
+        )
         return make_response(reactions_schema.dump(reactions), 200)
 
 
@@ -121,19 +125,18 @@ class ReactionByIDResource(Resource):
         if not reaction:
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
-        # Ownership verification
         if reaction.user_id != current_user_id:
             return make_response(
-                {"status": 403, "message": "Permission denied: You can only edit your own reactions"}, 403
+                {
+                    "status": 403,
+                    "message": "Permission denied: You can only edit your own reactions",
+                },
+                403,
             )
 
         try:
             data = request.get_json() or {}
-
-            # Prevent client from altering user_id
             data.pop("user_id", None)
-
-            # Validate input partially for PATCH
             validated_data = reaction_schema.load(data, partial=True)
 
             for key, value in validated_data.items():
@@ -174,7 +177,7 @@ class ReactionByIDResource(Resource):
     @jwt_required()
     def delete(self, reaction_id):
         current_user_id = int(get_jwt_identity())
-        claims = get_jwt()  # Get custom claims (role) from JWT token
+        claims = get_jwt()
         user_role = claims.get("role", "user")
 
         reaction = Reaction.query.filter_by(reaction_id=reaction_id).first()
@@ -182,10 +185,13 @@ class ReactionByIDResource(Resource):
         if not reaction:
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
-        # Allow deletion if the user is the OWNER OR an ADMIN
         if reaction.user_id != current_user_id and user_role != "admin":
             return make_response(
-                {"status": 403, "message": "Permission denied: You cannot delete this reaction"}, 403
+                {
+                    "status": 403,
+                    "message": "Permission denied: You cannot delete this reaction",
+                },
+                403,
             )
 
         try:
@@ -200,7 +206,7 @@ class ReactionByIDResource(Resource):
 
 # /reactions/<int:reaction_id>/upvote
 class ReactionUpvoteResource(Resource):
-    # POST /reactions/<int:reaction_id>/upvote - Protected: Upvote a reaction
+    # POST /reactions/<int:reaction_id>/upvote - Protected: Increment upvote count for a reaction
     @jwt_required()
     def post(self, reaction_id):
         reaction = Reaction.query.filter_by(reaction_id=reaction_id).first()
@@ -208,14 +214,9 @@ class ReactionUpvoteResource(Resource):
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
         try:
-            if hasattr(reaction, 'likes_count'):
-                reaction.likes_count = (reaction.likes_count or 0) + 1
+            reaction.upvotes = (getattr(reaction, "upvotes", 0) or 0) + 1
             db.session.commit()
-            return make_response({
-                "status": 200,
-                "message": "Reaction upvoted successfully",
-                "likes_count": getattr(reaction, 'likes_count', 0)
-            }, 200)
+            return make_response(reaction_schema.dump(reaction), 200)
         except Exception as e:
             db.session.rollback()
             log.error("upvote_error: %s", str(e))
