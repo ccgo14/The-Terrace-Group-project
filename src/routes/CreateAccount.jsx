@@ -77,27 +77,30 @@ export default function CreateAccount() {
   };
 
   return (
-    <AuthShell
-      heading="Create Account"
-      sub="Join the terrace. Set up your profile and start predicting."
-      footer={
-        <Link
-          to="/login"
-          className="text-night-pitch dark:text-floodlight underline underline-offset-2"
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors duration-150"
+          >
+            ← Back to homepage
+          </Link>
+        </div>
+
+        <AuthShell
+          heading="Create Account"
+          sub="Join the terrace. Set up your profile and start predicting."
+          footer={
+            <Link
+              to="/login"
+              className="text-night-pitch dark:text-floodlight underline underline-offset-2"
+            >
+              Already have an account? Sign in
+            </Link>
+          }
         >
-          Already have an account? Sign in
-        </Link>
-      }
-    >
-      <div className="mb-4">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors duration-150"
-        >
-          ← Back to homepage
-        </Link>
-      </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field
             label="First Name"
@@ -226,5 +229,7 @@ export default function CreateAccount() {
         <Button type="submit">Create Account</Button>
       </form>
     </AuthShell>
+      </div>
+    </div>
   );
 }
