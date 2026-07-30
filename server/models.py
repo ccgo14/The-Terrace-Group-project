@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 try:
     from server.extensions import db
 except ImportError:
-    from extensions import db
+    from .extensions import db
 
 bcrypt = Bcrypt()
 

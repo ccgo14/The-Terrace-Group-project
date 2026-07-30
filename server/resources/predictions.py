@@ -2,8 +2,8 @@ from flask import request, make_response
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from auth_utils import role_required
-from models import db, Match, Prediction
-from schemas import prediction_schema, predictions_schema
+from ..models import db, Match, Prediction
+from ..schemas import prediction_schema, predictions_schema
 
 try:
     from server.extensions import log

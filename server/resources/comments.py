@@ -1,8 +1,8 @@
 from flask import make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from models import db, Comment, Article, User
-from schemas import comment_schema, comments_schema
+from ..models import db, Comment, Article, User
+from ..schemas import comment_schema, comments_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from auth_utils import role_required

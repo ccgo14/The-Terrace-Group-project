@@ -2,8 +2,8 @@ from flask import make_response, request
 from flask_restful import Resource
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from models import db, League
-from schemas import league_schema, leagues_schema
+from ..models import db, League
+from ..schemas import league_schema, leagues_schema
 from auth_utils import role_required
 
 try:

@@ -8,8 +8,8 @@ try:
     from server.schemas import category_schema, categories_schema, articles_schema
     from server.auth_utils import role_required
 except ImportError:
-    from models import db, Category
-    from schemas import category_schema, categories_schema, articles_schema
+    from ..models import db, Category
+    from ..schemas import category_schema, categories_schema, articles_schema
     from auth_utils import role_required
 
 # Standard logging fallback

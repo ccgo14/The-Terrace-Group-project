@@ -2,8 +2,8 @@ from datetime import datetime
 from flask import request, make_response
 from flask_restful import Resource
 from marshmallow import ValidationError
-from models import db, Match
-from schemas import match_schema, matches_schema
+from ..models import db, Match
+from ..schemas import match_schema, matches_schema
 from auth_utils import role_required
 
 try:

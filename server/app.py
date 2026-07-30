@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request, g
 from flask_restful import Api
 import structlog
-from extensions import db, bcrypt, jwt, migrate, cors
+from .extensions import db, bcrypt, jwt, migrate, cors
 
 # Load environment variables from server/.env
 load_dotenv()

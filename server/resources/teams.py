@@ -1,7 +1,7 @@
 from flask import request, make_response
 from flask_restful import Resource
-from models import db, Team
-from schemas import team_schema, teams_schema
+from ..models import db, Team
+from ..schemas import team_schema, teams_schema
 from auth_utils import role_required  # <-- Properly imported decorator
 
 try:

@@ -19,8 +19,8 @@ try:
     )
     from server.auth_utils import role_required
 except ImportError:
-    from models import db, Article, User, Category, Comment
-    from schemas import article_schema, articles_schema, comments_schema, comment_schema
+    from ..models import db, Article, User, Category, Comment
+    from ..schemas import article_schema, articles_schema, comments_schema, comment_schema
     from auth_utils import role_required
 
 # Standard logging fallback
