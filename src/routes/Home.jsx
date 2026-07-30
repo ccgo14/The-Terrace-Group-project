@@ -16,10 +16,14 @@ export default function HomeFeed() {
   useEffect(() => {
     let cancelled = false;
     api
-      .get("/articles")
+      .get(
+        "https://newsapi.org/v2/everything?q=epl&from=2026-06-30&sortBy=publishedAt&apiKey=25502719a8bd4d52b92b2f361067bf40",
+      )
       .then((res) => {
         if (!cancelled) {
-          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          const items = Array.isArray(res.data?.articles)
+            ? res.data.articles
+            : [];
           setArticles(items.map(mapArticle));
           setLoading(false);
         }
@@ -37,7 +41,7 @@ export default function HomeFeed() {
   }, []);
 
   const categoryNames = useMemo(
-    () => ["ALL", ...categories.map((c) => c.name)],
+    () => ["ALL", ...(categories || []).map((c) => c.name)],
     [],
   );
 
@@ -75,7 +79,9 @@ export default function HomeFeed() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col border border-black/10 dark:border-white/10 rounded-card overflow-hidden">
+              <div
+                key={i}
+                className="flex flex-col border border-black/10 dark:border-white/10 rounded-card overflow-hidden">
                 <Skeleton className="w-full h-40 rounded-none" />
                 <div className="px-4 py-4 flex flex-col gap-3 flex-grow bg-white/80 dark:bg-terracing/40">
                   <Skeleton className="w-16 h-4" />

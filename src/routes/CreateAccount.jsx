@@ -40,7 +40,7 @@ export default function CreateAccount() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview); // Clean up previous blob URL
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
       const url = URL.createObjectURL(file);
       update("image", url);
       setAvatarPreview(url);
@@ -62,7 +62,7 @@ export default function CreateAccount() {
         role: form.role,
       });
 
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", res.data.access_token || res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       login(res.data.user);
       navigate("/");
@@ -83,10 +83,20 @@ export default function CreateAccount() {
       footer={
         <Link
           to="/login"
-          className="text-night-pitch dark:text-floodlight underline underline-offset-2">
+          className="text-night-pitch dark:text-floodlight underline underline-offset-2"
+        >
           Already have an account? Sign in
         </Link>
-      }>
+      }
+    >
+      <div className="mb-4">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors duration-150"
+        >
+          ← Back to homepage
+        </Link>
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field
@@ -120,12 +130,14 @@ export default function CreateAccount() {
           <select
             className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50"
             value={form.role}
-            onChange={(e) => update("role", e.target.value)}>
+            onChange={(e) => update("role", e.target.value)}
+          >
             {ROLES.map((r) => (
               <option
                 key={r}
                 value={r}
-                className="bg-floodlight dark:bg-night-pitch">
+                className="bg-floodlight dark:bg-night-pitch"
+              >
                 {r}
               </option>
             ))}
@@ -157,7 +169,8 @@ export default function CreateAccount() {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white">
+              className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white"
+            >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
@@ -182,7 +195,8 @@ export default function CreateAccount() {
           </span>
           <div
             className="w-full h-32 rounded-card border-2 border-dashed border-black/10 dark:border-white/10 flex items-center justify-center overflow-hidden cursor-pointer hover:border-black/30 dark:hover:border-white/30 transition-colors"
-            onClick={() => document.getElementById("avatar-input").click()}>
+            onClick={() => document.getElementById("avatar-input").click()}
+          >
             {avatarPreview ? (
               <img
                 src={avatarPreview}

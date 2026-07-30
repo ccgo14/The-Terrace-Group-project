@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   IconHome,
   IconFeed,
@@ -8,11 +9,13 @@ import {
   IconBookmark,
 } from "./Icons";
 
-// Mobile bottom bar mirrors the Figma reference exactly: Home / My Comments / Bookmarks / Profile.
-// Feed and Categories aren't dropped from the app — they're just not primary mobile nav items,
-// same tradeoff the Figma reference makes (4 tabs max on a bottom bar).
+// Mobile bottom bar — includes all primary routes so users can navigate
+// anywhere from the mobile nav. Feed and Categories are now primary
+// mobile nav items alongside Home, My Comments, Bookmarks, and Profile.
 const mobileItems = [
   { key: "home", label: "Home", to: "/", Icon: IconHome },
+  { key: "feed", label: "Feed", to: "/feed", Icon: IconFeed },
+  { key: "categories", label: "Browse", to: "/categories", Icon: IconGrid },
   {
     key: "comments",
     label: "My Comments",
@@ -49,6 +52,14 @@ const desktopItems = [
 ];
 
 export default function BottomNav({ active }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <>
       {/* Mobile bottom navigation — fixed, not sticky, so it stays pinned to the real viewport
@@ -75,6 +86,11 @@ export default function BottomNav({ active }) {
             );
           })}
         </div>
+        <button
+          onClick={handleLogout}
+          className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-[0.08em] text-red-500/70 hover:text-red-500 px-2 py-1">
+          Log out
+        </button>
       </nav>
 
       {/* Desktop sidebar navigation */}
@@ -105,6 +121,13 @@ export default function BottomNav({ active }) {
             );
           })}
         </div>
+        <button
+          onClick={handleLogout}
+          className="mt-auto flex items-center gap-3 px-4 py-3 rounded-card text-red-500/70 hover:text-red-500 hover:bg-red-500/5 transition-colors duration-100">
+          <span className="font-display font-semibold uppercase tracking-wide text-sm">
+            Log Out
+          </span>
+        </button>
       </nav>
     </>
   );
