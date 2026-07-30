@@ -1,0 +1,41 @@
+[33m166c277[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{0}: checkout: moving from david-feat-login/profilePage to dev
+[33mdf42206[m[33m ([m[1;31morigin/david-feat-login/profilePage[m[33m, [m[1;32mdavid-feat-login/profilePage[m[33m)[m HEAD@{1}: reset: moving to HEAD
+[33mdf42206[m[33m ([m[1;31morigin/david-feat-login/profilePage[m[33m, [m[1;32mdavid-feat-login/profilePage[m[33m)[m HEAD@{2}: checkout: moving from dev to david-feat-login/profilePage
+[33m166c277[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{3}: pull origin dev: Fast-forward
+[33m5ae53d8[m HEAD@{4}: checkout: moving from david-feat-login/profilePage to dev
+[33mdf42206[m[33m ([m[1;31morigin/david-feat-login/profilePage[m[33m, [m[1;32mdavid-feat-login/profilePage[m[33m)[m HEAD@{5}: commit (merge): Merge origin/dev keeping current branch updates
+[33m035f8c2[m HEAD@{6}: checkout: moving from dev to david-feat-login/profilePage
+[33m5ae53d8[m HEAD@{7}: checkout: moving from dev to dev
+[33m5ae53d8[m HEAD@{8}: pull origin dev: Fast-forward
+[33m9968496[m HEAD@{9}: checkout: moving from david-feat-login/profilePage to dev
+[33m035f8c2[m HEAD@{10}: checkout: moving from dev to david-feat-login/profilePage
+[33m9968496[m HEAD@{11}: checkout: moving from david-feat-login/profilePage to dev
+[33m035f8c2[m HEAD@{12}: commit: update endpoints to make sure they were working
+[33mc9c7b81[m HEAD@{13}: checkout: moving from dev to david-feat-login/profilePage
+[33m9968496[m HEAD@{14}: commit: endpoints modification
+[33m6793d70[m HEAD@{15}: commit: corrections to map up the end points
+[33mc961c6b[m HEAD@{16}: pull origin dev: Fast-forward
+[33mc75ef51[m HEAD@{17}: checkout: moving from david-feat-login/profilePage to dev
+[33mc9c7b81[m HEAD@{18}: commit: added cookies and session, authentication and password hashing
+[33mf8afb15[m HEAD@{19}: commit: added serialization, schemas and api routes
+[33m84223aa[m HEAD@{20}: commit (merge): Merge branch 'dev' of github.com:ihomba92/The-Terrace-Group-project into david-feat-login/profilePage
+[33m828c5c7[m HEAD@{21}: commit: added relations to server
+[33m5024f4a[m HEAD@{22}: checkout: moving from dev to david-feat-login/profilePage
+[33mc75ef51[m HEAD@{23}: commit: added relationships
+[33mb51f9c6[m HEAD@{24}: commit: added relationships
+[33mdc5dd0e[m HEAD@{25}: pull origin dev: Fast-forward
+[33m1a29962[m HEAD@{26}: pull origin dev: Fast-forward
+[33m901fcf0[m HEAD@{27}: checkout: moving from david-feat-login/profilePage to dev
+[33m5024f4a[m HEAD@{28}: commit: edited the models file to add name for the follow table
+[33m0a1279b[m HEAD@{29}: commit: added server file with app and models file migration
+[33m5c4e7c3[m HEAD@{30}: checkout: moving from dev to david-feat-login/profilePage
+[33m901fcf0[m HEAD@{31}: pull origin dev: Fast-forward
+[33mbe95133[m[33m ([m[1;31morigin/john/auth-onboarding[m[33m)[m HEAD@{32}: checkout: moving from david-feat-login/profilePage to dev
+[33m5c4e7c3[m HEAD@{33}: commit: git commit
+[33m507a732[m HEAD@{34}: commit: feat: creataccount, loginpage and userprofile components
+[33mbe95133[m[33m ([m[1;31morigin/john/auth-onboarding[m[33m)[m HEAD@{35}: checkout: moving from dev to david-feat-login/profilePage
+[33mbe95133[m[33m ([m[1;31morigin/john/auth-onboarding[m[33m)[m HEAD@{36}: commit: commit
+[33m0792c59[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{37}: checkout: moving from main to dev
+[33m0792c59[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{38}: Branch: renamed refs/heads/mai to refs/heads/main
+[33m0792c59[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{40}: Branch: renamed refs/heads/main to refs/heads/mai
+[33m0792c59[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{42}: commit (initial): first commit
