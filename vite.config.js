@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5555",
+        target:
+          "https://newsapi.org/v2/everything?q=epl&from=2026-06-30&sortBy=publishedAt&apiKey=25502719a8bd4d52b92b2f361067bf40",
         changeOrigin: true,
       },
       "/auth": {
@@ -15,7 +16,8 @@ export default defineConfig({
         changeOrigin: true,
       },
       "/articles": {
-        target: "http://localhost:5555",
+        target:
+          "https://newsapi.org/v2/everything?q=epl&from=2026-06-30&sortBy=publishedAt&apiKey=25502719a8bd4d52b92b2f361067bf40",
         changeOrigin: true,
       },
       "/categories": {
