@@ -4,11 +4,11 @@ import api from "../api/client";
 import { mapComment } from "../api/mappers";
 import { useAuth } from "../context/AuthContext";
 
-export default function CommentSection({ articleId }) {
+export default function CommentSection({ articleId, initialUpvotes = 0, onUpvoteUpdate }) {
   const [reactionsList, setReactionsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newCommentText, setNewCommentText] = useState("");
-  const [upvotes, setUpvotes] = useState(0);
+  const [upvotes, setUpvotes] = useState(initialUpvotes);
   const [downvotes, setDownvotes] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -44,6 +44,20 @@ export default function CommentSection({ articleId }) {
       cancelled = true;
     };
   }, [articleId]);
+
+  // Handle Upvote API Integration
+  function handleUpvote() {
+    api
+      .post(`/articles/${articleId}/upvote`)
+      .then((res) => {
+        const updatedLikes = res.data.likes_count ?? upvotes + 1;
+        setUpvotes(updatedLikes);
+        if (onUpvoteUpdate) onUpvoteUpdate(updatedLikes);
+      })
+      .catch((err) => {
+        console.error("Failed to upvote article:", err);
+      });
+  }
 
   function onAddComment(event) {
     event.preventDefault();
@@ -151,9 +165,7 @@ export default function CommentSection({ articleId }) {
         {/* Upvote / Downvote actions */}
         <div className="flex gap-4 items-center pt-2 text-xs text-terracing/60 dark:text-floodlight/50">
           <button
-            onClick={function () {
-              setUpvotes(upvotes + 1);
-            }}
+            onClick={handleUpvote}
             className="flex items-center gap-1 text-terracing/60 dark:text-floodlight/50 hover:text-black dark:hover:text-white transition-colors duration-100">
             <svg
               className="w-3.5 h-3.5"

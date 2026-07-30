@@ -61,7 +61,8 @@ export default function Categories() {
             {fetchedCategories.map((c) => (
               <li key={c.name}>
                 <Link
-                  to="/feed"
+                  // UPDATED: Dynamically pass the category name as a query parameter
+                  to={`/feed?category=${encodeURIComponent(c.name)}`}
                   className="flex items-center justify-between px-4 py-4 border-b border-black/10 dark:border-white/10 md:border-r md:last:border-r-0
                   text-night-pitch dark:text-floodlight hover:bg-black/5 dark:hover:bg-white/5
                   transition-colors duration-100">

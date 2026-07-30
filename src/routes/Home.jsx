@@ -13,10 +13,16 @@ export default function HomeFeed() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Re-fetch news whenever the active category changes
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+
+    // If "ALL" is selected, default to "football", otherwise use the category name
+    const searchQuery = activeCategory === "ALL" ? "football" : activeCategory;
+
     api
-      .get("/articles")
+      .get(`/news?q=${encodeURIComponent(searchQuery)}`)
       .then((res) => {
         if (!cancelled) {
           const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
@@ -31,22 +37,16 @@ export default function HomeFeed() {
           setLoading(false);
         }
       });
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeCategory]); // <-- Triggers a new fetch when user clicks different category buttons
 
   const categoryNames = useMemo(
     () => ["ALL", ...categories.map((c) => c.name)],
     [],
   );
-
-  const filtered = useMemo(() => {
-    if (activeCategory === "ALL") return articles;
-    return articles.filter(
-      (a) => a.category === activeCategory || a.kind === activeCategory,
-    );
-  }, [activeCategory, articles]);
 
   return (
     <Screen sidebar nav>
@@ -86,13 +86,13 @@ export default function HomeFeed() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : articles.length === 0 ? (
           <div className="py-12 text-center font-mono text-sm text-terracing/60 dark:text-floodlight/50 border border-black/10 dark:border-white/10 rounded-card">
             No articles match this filter.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {filtered.map((a) => (
+            {articles.map((a) => (
               <ArticleCard key={a.id} article={a} />
             ))}
           </div>
