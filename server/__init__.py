@@ -60,9 +60,54 @@ def create_app():
 
     # APPLICATION CONFIGURATION (.env integration)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///instance/app.db"
-    )
+
+    # ---------------------------------------------------------
+    # Database Directory & URI Configuration
+    # ---------------------------------------------------------
+
+    # 1. Ensure Flask's default instance directory exists
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError as e:
+        raise RuntimeError(
+            f"Cannot create instance directory at {app.instance_path}: {e}. "
+            "Ensure the application has write permissions to its root directory."
+        ) from e
+
+    # 2. Configure Database URI and safely handle paths
+    database_url = os.getenv("DATABASE_URL")
+
+    if database_url:
+        if database_url.startswith("sqlite:////"):
+            # Absolute SQLite path: sqlite:////home/caleb/.../app.db
+            db_path = database_url[10:]  # Retains leading '/'
+            db_dir = os.path.dirname(db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
+            app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
+        elif database_url.startswith("sqlite:///"):
+            # Relative SQLite path: sqlite:///instance/app.db
+            # Strip prefix (10 chars) AND any leading slashes to force relative pathing
+            rel_path = database_url[10:].lstrip("/")
+
+            # Anchor relative path cleanly to app.root_path (Group-project/server)
+            abs_db_path = os.path.abspath(os.path.join(app.root_path, rel_path))
+            db_dir = os.path.dirname(abs_db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
+
+            # Format as an absolute URI with 4 slashes
+            app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{abs_db_path}"
+
+        else:
+            # Non-SQLite database URLs (e.g., PostgreSQL, MySQL)
+            app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    else:
+        # Default fallback: Use absolute path inside Flask's server/instance/ folder
+        db_path = os.path.join(app.instance_path, "app.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Security & JWT Expiry
@@ -76,17 +121,8 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=access_minutes)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=refresh_days)
 
-    # JWT Cookie Setup
-    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
-    app.config["JWT_COOKIE_SECURE"] = (
-        os.getenv("FLASK_ENV") == "production"
-    )  # True in prod, False in dev
-    app.config["JWT_COOKIE_CSRF_PROTECT"] = True
-    app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
-    app.config["JWT_REFRESH_COOKIE_PATH"] = "/auth/refresh"
-    app.config["JWT_COOKIE_SAMESITE"] = (
-        "Lax"  # Allows cross-port localhost requests (3000 -> 5555)
-    )
+    # JWT Token Setup (header-based only)
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
     # 0. INITIALIZE LOGGING & MIDDLEWARE
     configure_logging()
@@ -115,7 +151,7 @@ def create_app():
 
         log_method = logger.info
         if 400 <= response.status_code < 500:
-            log_method = logger.warn
+            log_method = logger.warning
         elif response.status_code >= 500:
             log_method = logger.error
 
@@ -139,16 +175,20 @@ def create_app():
 
     # 1. INITIALIZE CORS
     frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    vercel_origin = os.getenv("VERCEL_URL")
+    origins = [
+        frontend_origin,
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    if vercel_origin:
+        origins.append(vercel_origin)
     cors.init_app(
         app,
-        supports_credentials=True,  # Required for HttpOnly cookies across origins
-        origins=[
-            frontend_origin,
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-        ],
+        supports_credentials=True,
+        origins=origins,
         allow_headers=["Content-Type", "Authorization", "X-CSRF-TOKEN"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
@@ -214,6 +254,25 @@ def create_app():
 
     # 4. REGISTER RESTFUL API RESOURCES
     api = Api(app)
+
+    # ---------------------------------------------------------
+    # Root / Health Check Route
+    # ---------------------------------------------------------
+    @app.route("/")
+    def index():
+        """Root endpoint returning basic API status information."""
+        return jsonify({
+            "message": "Welcome to the Moringa Dev Hub API",
+            "status": "online",
+            "endpoints": {
+                "articles": "/articles",
+                "auth": "/auth",
+                "categories": "/categories",
+                "matches": "/matches",
+                "predictions": "/predictions",
+            }
+        }), 200
+
     register_routes(api)
 
     return app

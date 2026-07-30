@@ -3,9 +3,6 @@ from flask_restful import Resource
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    set_access_cookies,
-    set_refresh_cookies,
-    unset_jwt_cookies,
     jwt_required,
     get_jwt_identity,
     get_jwt,
@@ -74,18 +71,15 @@ class RegisterResource(Resource):
                 additional_claims=additional_claims,
             )
 
-            response = make_response(
+            return make_response(
                 {
                     "message": "User registered successfully",
                     "user": user_schema.dump(user),
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
                 },
                 201,
             )
-
-            set_access_cookies(response, access_token)
-            set_refresh_cookies(response, refresh_token)
-
-            return response
 
         except ValidationError as err:
             return make_response({"status": 400, "errors": err.messages}, 400)
@@ -125,18 +119,15 @@ class LoginResource(Resource):
                 additional_claims=additional_claims,
             )
 
-            response = make_response(
+            return make_response(
                 {
                     "message": "Login successful",
                     "user": user_schema.dump(user),
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
                 },
                 200,
             )
-
-            set_access_cookies(response, access_token)
-            set_refresh_cookies(response, refresh_token)
-
-            return response
 
         except ValidationError as err:
             return make_response({"status": 400, "errors": err.messages}, 400)
@@ -144,16 +135,14 @@ class LoginResource(Resource):
 
 class LogoutResource(Resource):
     def post(self):
-        """Logs out the user by clearing the JWT cookies from the browser."""
-        response = make_response({"message": "Successfully logged out"}, 200)
-        unset_jwt_cookies(response)
-        return response
+        """Logs out the user."""
+        return make_response({"message": "Successfully logged out"}, 200)
 
 
 class RefreshTokenResource(Resource):
     @jwt_required(refresh=True)
     def post(self):
-        """Generates a new access token using a valid refresh cookie/token."""
+        """Generates a new access token using a valid refresh token."""
         current_user_id = get_jwt_identity()
         claims = get_jwt()
 
@@ -163,9 +152,13 @@ class RefreshTokenResource(Resource):
             additional_claims={"role": user_role},
         )
 
-        response = make_response({"message": "Token refreshed successfully"}, 200)
-        set_access_cookies(response, new_access_token)
-        return response
+        return make_response(
+            {
+                "message": "Token refreshed successfully",
+                "access_token": new_access_token,
+            },
+            200,
+        )
 
 
 class MeResource(Resource):

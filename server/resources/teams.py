@@ -5,7 +5,7 @@ from ..schemas import team_schema, teams_schema
 from ..auth_utils import role_required  # <-- Properly imported decorator
 
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
     log = logging.getLogger(__name__)
