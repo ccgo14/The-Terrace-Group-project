@@ -143,7 +143,7 @@ export default function Profile() {
           title="Profile"
           right={
             <Link
-              to="/post-article"
+              to="/create-article"
               className="text-night-pitch dark:text-floodlight block"
               aria-label="Post"
             >
@@ -168,7 +168,7 @@ export default function Profile() {
         title="Profile"
         right={
           <Link
-            to="/post-article"
+             to="/create-article"
             className="text-night-pitch dark:text-floodlight block"
             aria-label="Post"
           >

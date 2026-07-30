@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request, g
 from flask_restful import Api
 import structlog
-from .extensions import db, bcrypt, jwt, migrate, cors
+import sys
+import os
 
-# Load environment variables from server/.env
-load_dotenv()
+from server.extensions import db, bcrypt, jwt, migrate, cors
 
 
 def configure_logging():
@@ -43,6 +43,7 @@ def create_app():
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
     
     basedir = os.path.abspath(os.path.dirname(__file__))
+    load_dotenv(os.path.join(basedir, ".env"))
     instance_dir = os.path.join(basedir, "instance")
     
     # Programmatically ensure the instance directory exists to avoid operational errors
@@ -82,8 +83,8 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=access_minutes)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=refresh_days)
 
-    # JWT Cookie Setup
-    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    # JWT Setup - Support both Bearer headers (localStorage) and cookies
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
     app.config["JWT_COOKIE_CSRF_PROTECT"] = True
     app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
@@ -138,7 +139,7 @@ def create_app():
     cors.init_app(
         app,
         supports_credentials=True,
-        origins=[frontend_origin, "http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+        origins=["http://localhost:5173", "http://127.0.0.1:5173"],
         allow_headers=["Content-Type", "Authorization", "X-CSRF-TOKEN"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
@@ -190,25 +191,25 @@ def create_app():
 
 
 def register_routes(api):
-    from resources.auth import (
+    from server.resources.auth import (
         RegisterResource, 
         LoginResource, 
         LogoutResource, 
         MeResource, 
         RefreshTokenResource
     )
-    from resources.users import (
+    from server.resources.users import (
         UsersResource, UserByIDResource, UserFollowResource, 
         UserFollowersResource, UserFollowingResource, UserStatsResource
     )
-    from resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
-    from resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource, NewsResource   
-    from resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
-    from resources.leagues import LeaguesResource, LeagueByIDResource
-    from resources.teams import TeamsResource, TeamByIDResource
-    from resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
-    from resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
-    from resources.admin import AdminReportsResource, AdminArticlePublishResource
+    from server.resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
+    from server.resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource, NewsResource   
+    from server.resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
+    from server.resources.leagues import LeaguesResource, LeagueByIDResource
+    from server.resources.teams import TeamsResource, TeamByIDResource
+    from server.resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
+    from server.resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
+    from server.resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")

@@ -5,7 +5,7 @@ import ArticleCard from "../components/ArticleCard";
 import { LeagueTable } from "../components/Scoreboard";
 import { Skeleton } from "../components/Skeleton";
 import { categories, table } from "../data";
-import api from "../api/client";
+import { externalNewsApi } from "../services/api";
 import { mapArticle } from "../api/mappers";
 
 export default function HomeFeed() {
@@ -21,8 +21,8 @@ export default function HomeFeed() {
     // If "ALL" is selected, default to "football", otherwise use the category name
     const searchQuery = activeCategory === "ALL" ? "football" : activeCategory;
 
-    api
-      .get(`/news?q=${encodeURIComponent(searchQuery)}`)
+    externalNewsApi
+      .getExternal({ q: searchQuery })
       .then((res) => {
         if (!cancelled) {
           const items = Array.isArray(res.data?.articles)

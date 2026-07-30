@@ -14,8 +14,8 @@ try:
     from server.models import db, User, Profile
     from server.schemas import user_schema, login_schema, register_schema
 except ImportError:
-    from ..models import db, User, Profile
-    from ..schemas import user_schema, login_schema, register_schema
+    from models import db, User, Profile
+    from schemas import user_schema, login_schema, register_schema
 
 
 class RegisterResource(Resource):

@@ -9,8 +9,8 @@ try:
     from server.schemas import reaction_schema, reactions_schema
     from server.auth_utils import role_required
 except ImportError:
-    from ..models import db, Reaction, User, Article
-    from ..schemas import reaction_schema, reactions_schema
+    from models import db, Reaction, User, Article
+    from schemas import reaction_schema, reactions_schema
     from auth_utils import role_required
 
 # Standard logging fallback

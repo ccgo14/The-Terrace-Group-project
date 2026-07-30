@@ -19,8 +19,8 @@ try:
     )
     from server.auth_utils import role_required
 except ImportError:
-    from ..models import db, Article, User, Category, Comment
-    from ..schemas import article_schema, articles_schema, comments_schema, comment_schema
+    from models import db, Article, User, Category, Comment
+    from schemas import article_schema, articles_schema, comments_schema, comment_schema
     from auth_utils import role_required
 
 # Standard logging fallback
@@ -343,21 +343,37 @@ class NewsResource(Resource):
                 "pageSize": per_page
             }
 
+            api_key = os.getenv("NEWS_API_KEY")
+            if not api_key:
+                return make_response({
+                    "articles": [],
+                    "total": 0,
+                    "current_page": page,
+                    "per_page": per_page,
+                    "error": "News API key is not configured"
+                }, 500)
+
             response = requests.get(
                 "https://newsapi.org/v2/everything",
                 params=params,
-                headers={"X-Api-Key": os.getenv("NEWS_API_KEY")},
+                headers={"X-Api-Key": api_key},
                 timeout=10,
             )
 
             data = response.json()
 
+            # Never proxy 401/403 upstream to the frontend, because the
+            # global auth interceptor treats ANY 401 as "not authenticated"
+            # and redirects the user to /login.
+            status = 200 if response.status_code < 400 else 500
+
             return make_response({
-                "articles": data.get("articles", []),
-                "total": data.get("totalResults", 0),
+                "articles": data.get("articles", []) if status == 200 else [],
+                "total": data.get("totalResults", 0) if status == 200 else 0,
                 "current_page": page,
-                "per_page": per_page
-            }, response.status_code)
+                "per_page": per_page,
+                **({"error": "Upstream news provider rejected the request"} if status == 500 else {})
+            }, status)
 
         except requests.RequestException as e:
             return make_response(

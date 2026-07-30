@@ -28,7 +28,7 @@ const mobileItems = [
     to: "/bookmarks",
     Icon: IconBookmark,
   },
-  { key: "profile", label: "Profile", to: "/profile/1", Icon: IconUser },
+  { key: "profile", label: "Profile", to: "/user-profile", Icon: IconUser },
 ];
 
 // Desktop sidebar has room, so it keeps every primary route including Feed and Categories.
@@ -48,7 +48,7 @@ const desktopItems = [
     to: "/bookmarks",
     Icon: IconBookmark,
   },
-  { key: "profile", label: "Profile", to: "/profile/1", Icon: IconUser },
+  { key: "profile", label: "Profile", to: "/user-profile", Icon: IconUser },
 ];
 
 export default function BottomNav({ active }) {

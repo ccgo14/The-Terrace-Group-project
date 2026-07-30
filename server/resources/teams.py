@@ -1,8 +1,13 @@
 from flask import request, make_response
 from flask_restful import Resource
-from ..models import db, Team
-from ..schemas import team_schema, teams_schema
-from auth_utils import role_required  # <-- Properly imported decorator
+try:
+    from server.models import db, Team
+    from server.schemas import team_schema, teams_schema
+    from server.auth_utils import role_required  # <-- Properly imported decorator
+except ImportError:
+    from models import db, Team
+    from schemas import team_schema, teams_schema
+    from auth_utils import role_required  # <-- Properly imported decorator
 
 try:
     from server.extensions import log
@@ -45,7 +50,7 @@ class TeamsResource(Resource):
 class TeamByIDResource(Resource):
     # GET /teams/<int:team_id> - Public: Get specific team details
     def get(self, team_id):
-        team = Team.query.filter_by(team_id=team_id).first()
+        team = Team.query.filter_by(id=team_id).first()
         if not team:
             return make_response({"status": 404, "message": "Team not found"}, 404)
 
@@ -54,7 +59,7 @@ class TeamByIDResource(Resource):
     # PATCH /teams/<int:team_id> - Admin Only: Update team info (logo, name, stadium)
     @role_required(["admin"])
     def patch(self, team_id):
-        team = Team.query.filter_by(team_id=team_id).first()
+        team = Team.query.filter_by(id=team_id).first()
         if not team:
             return make_response({"status": 404, "message": "Team not found"}, 404)
 
@@ -77,7 +82,7 @@ class TeamByIDResource(Resource):
     # DELETE /teams/<int:team_id> - Admin Only: Remove a team
     @role_required(["admin"])
     def delete(self, team_id):
-        team = Team.query.filter_by(team_id=team_id).first()
+        team = Team.query.filter_by(id=team_id).first()
         if not team:
             return make_response({"status": 404, "message": "Team not found"}, 404)
 

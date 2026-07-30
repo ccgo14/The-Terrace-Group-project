@@ -41,15 +41,16 @@ export const authApi = {
 
 // Article Management Endpoints
 export const articlesApi = {
-  getAll: (params) =>
-    api.get(
-      "https://newsapi.org/v2/everything?q=epl&from=2026-06-30&sortBy=publishedAt&apiKey=25502719a8bd4d52b92b2f361067bf40",
-      { params },
-    ),
+  getAll: (params) => api.get("/articles", { params }),
   getById: (id) => api.get(`/articles/${id}`),
   create: (data) => api.post("/articles", data),
   update: (id, data) => api.patch(`/articles/${id}`, data),
   delete: (id) => api.delete(`/articles/${id}`),
+};
+
+// External News Proxy Endpoints
+export const externalNewsApi = {
+  getExternal: (params) => api.get("/news", { params }),
 };
 
 // Comment Management Endpoints

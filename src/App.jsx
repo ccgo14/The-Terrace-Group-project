@@ -14,6 +14,8 @@ import MyComments from "./routes/MyComments";
 import Bookmarks from "./routes/Bookmarks";
 import MatchPredictorPage from "./routes/MatchPredictorPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Scoreboard } from "./components/Scoreboard";
+import { liveMatch } from "./data";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -35,6 +37,27 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <span className="font-mono text-sm text-terracing/60 dark:text-floodlight/50">
+          Loading...
+        </span>
+      </div>
+    );
+  }
+
+  const userRole = user?.profile?.role || user?.role;
+  if (!user || userRole !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -50,102 +73,25 @@ export default function App() {
       <div className="w-full min-h-screen bg-floodlight text-night-pitch dark:bg-night-pitch dark:text-floodlight font-body overflow-x-hidden">
         <BrowserRouter>
           <Routes>
-            {/* Public routes */}
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<CreateAccount />} />
+            <Route path="/create-account" element={<CreateAccount />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/articles/:id" element={<ArticleDetail />} />
+            <Route path="/scoreboard" element={<Scoreboard match={liveMatch} />} />
 
-            {/* Protected routes */}
-            <Route
-              path="/feed"
-              element={
-                <ProtectedRoute>
-                  <Feed />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/categories"
-              element={
-                <ProtectedRoute>
-                  <Categories />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-comments"
-              element={
-                <ProtectedRoute>
-                  <MyComments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/bookmarks"
-              element={
-                <ProtectedRoute>
-                  <Bookmarks />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/:id"
-              element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-article"
-              element={
-                <ProtectedRoute>
-                  <PostArticle />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/create-article"
-              element={
-                <ProtectedRoute>
-                  <PostArticle />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin-dashboard"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/user-profile"
-              element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/match-predictor/:matchId"
-              element={
-                <ProtectedRoute>
-                  <MatchPredictorPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Protected User Routes */}
+            <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+            <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+            <Route path="/match-predictor/:matchId" element={<ProtectedRoute><MatchPredictorPage /></ProtectedRoute>} />
+            <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/my-comments" element={<ProtectedRoute><MyComments /></ProtectedRoute>} />
+            <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
+            <Route path="/create-article" element={<ProtectedRoute><PostArticle /></ProtectedRoute>} />
+
+            {/* Protected Admin Routes */}
+            <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

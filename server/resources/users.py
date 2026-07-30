@@ -3,9 +3,14 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import or_
 from marshmallow import ValidationError
-from ..models import db, User, Profile, Article, Prediction, Reaction
-from ..schemas import user_schema, users_schema, profile_schema
-from auth_utils import role_required
+try:
+    from server.models import db, User, Profile, Article, Prediction, Reaction
+    from server.schemas import user_schema, users_schema, profile_schema
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, User, Profile, Article, Prediction, Reaction
+    from schemas import user_schema, users_schema, profile_schema
+    from auth_utils import role_required
 
 
 try:
@@ -114,8 +119,11 @@ class UserStatsResource(Resource):
         predictions_count = Prediction.query.filter_by(user_id=user_id).count()
 
         # Calculate accuracy from resolved predictions
-        resolved_preds = Prediction.query.filter_by(user_id=user_id, status="RESOLVED").all()
-        correct_preds = sum(1 for p in resolved_preds if getattr(p, 'is_correct', False))
+        resolved_preds = Prediction.query.filter(
+            Prediction.user_id == user_id,
+            Prediction.status.in_(["CORRECT", "INCORRECT"])
+        ).all()
+        correct_preds = sum(1 for p in resolved_preds if p.status == "CORRECT")
         accuracy = (correct_preds / len(resolved_preds) * 100) if resolved_preds else 0.0
 
         return make_response({

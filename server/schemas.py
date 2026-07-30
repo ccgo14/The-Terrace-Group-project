@@ -151,8 +151,7 @@ class ArticleSchema(Schema):
     cover_image = fields.Str(dump_default="https://placeholder.com")
     view_count = fields.Int(dump_only=True)
     likes_count = fields.Int(dump_only=True)
-    published = fields.Bool(dump_default=False)
-    published_at = fields.DateTime(allow_none=True)
+    published_at = fields.DateTime(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 

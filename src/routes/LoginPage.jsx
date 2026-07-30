@@ -61,7 +61,7 @@ export default function LoginPage() {
           sub="Enter the terrace. Access predictions, reactions, and live match banter."
           footer={
             <Link
-              to="/signup"
+              to="/create-account"
               className="text-night-pitch dark:text-floodlight underline underline-offset-2"
             >
               Create an account

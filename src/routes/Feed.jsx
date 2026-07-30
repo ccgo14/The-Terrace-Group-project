@@ -5,7 +5,7 @@ import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
 import { Scoreboard } from "../components/Scoreboard";
 import { Skeleton } from "../components/Skeleton";
-import { liveMatch } from "../data";
+import { liveMatch, categories } from "../data";
 import api from "../api/client";
 import { mapArticle } from "../api/mappers";
 
@@ -23,26 +23,47 @@ export default function Feed() {
     let cancelled = false;
     setLoading(true);
 
-    // 2. Decide the query string: use the category if available, otherwise default to "football"
-    const searchQuery = selectedCategory ? selectedCategory : "football";
+    const fetchArticles = async () => {
+      try {
+        let categoryId = null;
+        if (selectedCategory) {
+          try {
+            const catRes = await api.get("/categories");
+            const dbCategories = Array.isArray(catRes.data) ? catRes.data : [];
+            const found = dbCategories.find(
+              (c) => (c.category_name || c.name || "").toLowerCase() === selectedCategory.toLowerCase()
+            );
+            if (found) categoryId = found.category_id || found.id;
+          } catch {
+            const found = categories.find(
+              (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
+            );
+            if (found) categoryId = found.id;
+          }
+        }
 
-    api
-      .get(`/news?q=${encodeURIComponent(searchQuery)}`)
-      .then((res) => {
-        console.log("Fetched articles:", res.data);
+        const endpoint = categoryId
+          ? `/articles?category_id=${categoryId}`
+          : "/articles";
+
+        const res = await api.get(endpoint);
         if (!cancelled) {
-          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          const items = Array.isArray(res.data)
+            ? res.data
+            : (res.data?.articles || []);
           setArticles(items.map(mapArticle));
           setLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           console.error("Failed to fetch articles:", err);
           setArticles([]);
           setLoading(false);
         }
-      });
+      }
+    };
+
+    fetchArticles();
     return () => {
       cancelled = true;
     };
