@@ -2,26 +2,27 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { KindLabel, MetaRow } from "./UI";
 
-// Match reports use photography; fan reactions use flat illustration.
-// Cards are separated by hairline borders, never shadows.
 export default function ArticleCard({ article }) {
   const [imgError, setImgError] = useState(false);
+  
   const {
+    id,
     title = "Untitled",
     excerpt = "",
     kind = "ARTICLE",
     upvotes = 0,
     comments = 0,
+    isExternal,
+    url,
+    image,
   } = article || {};
 
-  return (
-    <Link
-      to={`/articles/${article.id}`}
-      className="block w-full h-full flex flex-col border-b border-black/10 dark:border-white/10">
+  const cardContent = (
+    <>
       <div className="w-full h-40 overflow-hidden bg-terracing/20 dark:bg-terracing/40 flex-shrink-0">
         {!imgError && (
           <img
-            src={article.image || "/placeholder.svg"}
+            src={image || "/placeholder.svg"}
             alt={title}
             onError={() => setImgError(true)}
             className="w-full h-full object-cover"
@@ -40,6 +41,22 @@ export default function ArticleCard({ article }) {
           <MetaRow upvotes={upvotes} comments={comments} />
         </div>
       </div>
+    </>
+  );
+
+  return isExternal ? (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="block w-full h-full flex flex-col border-b border-black/10 dark:border-white/10">
+      {cardContent}
+    </a>
+  ) : (
+    <Link
+      to={`/articles/${id}`}
+      className="block w-full h-full flex flex-col border-b border-black/10 dark:border-white/10">
+      {cardContent}
     </Link>
   );
 }

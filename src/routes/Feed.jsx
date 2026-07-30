@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Screen, Header } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
@@ -13,12 +14,22 @@ const filters = ["For You", "Match Reports", "Fan Reactions", "Following"];
 export default function Feed() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // 1. Read query parameters from the URL
+  const [searchParams] = useSearchParams();
+  const selectedCategory = searchParams.get("category"); // e.g. "La Liga" or null
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+
+    // 2. Decide the query string: use the category if available, otherwise default to "football"
+    const searchQuery = selectedCategory ? selectedCategory : "football";
+
     api
-      .get("/articles")
+      .get(`/news?q=${encodeURIComponent(searchQuery)}`)
       .then((res) => {
+        console.log("Fetched articles:", res.data);
         if (!cancelled) {
           const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
           setArticles(items.map(mapArticle));
@@ -35,11 +46,12 @@ export default function Feed() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedCategory]); // 3. Re-run effect whenever the category query parameter changes
 
   return (
     <Screen sidebar nav>
-      <Header title="Your Feed" />
+      {/* Dynamically update header title if a category is selected */}
+      <Header title={selectedCategory ? selectedCategory : "Your Feed"} />
 
       {/* filter chips — hover inverts, no rounded-full pills */}
       <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-black/10 dark:border-white/10">

@@ -37,6 +37,21 @@ export default function ArticleDetail() {
     };
   }, [id]);
 
+  // Safely resolve the ID regardless of whether the mapper/backend uses id or article_id
+  const resolvedArticleId = article?.id || article?.article_id || id;
+
+  // Upvote button handler using the robust resolved identifier
+  const handleUpvote = () => {
+    api
+      .post(`/articles/${resolvedArticleId}/upvote`)
+      .then((res) => {
+        setArticle(mapArticle(res.data));
+      })
+      .catch((err) => {
+        console.error("Failed to upvote article:", err);
+      });
+  };
+
   if (loading) {
     return (
       <Screen>
@@ -153,11 +168,18 @@ export default function ArticleDetail() {
               </p>
             </div>
 
-            <div className="pt-5">
+            {/* MetaRow updated to support a click action for upvoting */}
+            <div className="pt-5 flex items-center justify-between">
               <MetaRow upvotes={article.upvotes} comments={article.comments} />
+              <button
+                onClick={handleUpvote}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-black/10 dark:border-white/10 rounded font-mono text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <IconUpvote className="w-4 h-4" />
+                <span>Upvote Article</span>
+              </button>
             </div>
 
-            {/* Reactions section — UGC, illustrated tone */}
+            {/* Reactions section */}
             <section className="mt-8 border-t border-black/10 dark:border-white/10 pt-5">
               <h2 className="font-display font-bold uppercase text-lg tracking-wide text-night-pitch dark:text-floodlight">
                 Fan Reactions
@@ -197,10 +219,10 @@ export default function ArticleDetail() {
             </section>
           </article>
 
-          {/* Sidebar with widgets */}
+          {/* Sidebar widgets */}
           <aside className="lg:col-span-1 space-y-4">
-            <MatchPredictor articleId={article.id} matchId={1} />
-            <CommentSection articleId={article.id} />
+            <MatchPredictor articleId={resolvedArticleId} matchId={1} />
+            <CommentSection articleId={resolvedArticleId} />
           </aside>
         </div>
       </div>
