@@ -25,7 +25,9 @@ export default function HomeFeed() {
       .get(`/news?q=${encodeURIComponent(searchQuery)}`)
       .then((res) => {
         if (!cancelled) {
-          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          const items = Array.isArray(res.data?.articles)
+            ? res.data.articles
+            : [];
           setArticles(items.map(mapArticle));
           setLoading(false);
         }
@@ -41,10 +43,10 @@ export default function HomeFeed() {
     return () => {
       cancelled = true;
     };
-  }, [activeCategory]); // <-- Triggers a new fetch when user clicks different category buttons
+  }, [activeCategory]); // Triggers a new fetch when user clicks different category buttons
 
   const categoryNames = useMemo(
-    () => ["ALL", ...categories.map((c) => c.name)],
+    () => ["ALL", ...(categories || []).map((c) => c.name)],
     [],
   );
 
@@ -53,6 +55,7 @@ export default function HomeFeed() {
       <Header title="The Terrace" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {/* Category Filter Pills */}
         <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-3 border-b border-black/10 dark:border-white/10 mb-6">
           {categoryNames.map((name) => {
             const isActive = activeCategory === name;
@@ -72,10 +75,13 @@ export default function HomeFeed() {
           })}
         </div>
 
+        {/* Article Cards Grid & Skeleton Loader */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col border border-black/10 dark:border-white/10 rounded-card overflow-hidden">
+              <div
+                key={i}
+                className="flex flex-col border border-black/10 dark:border-white/10 rounded-card overflow-hidden">
                 <Skeleton className="w-full h-40 rounded-none" />
                 <div className="px-4 py-4 flex flex-col gap-3 flex-grow bg-white/80 dark:bg-terracing/40">
                   <Skeleton className="w-16 h-4" />
@@ -98,6 +104,7 @@ export default function HomeFeed() {
           </div>
         )}
 
+        {/* League Table Section */}
         <section className="py-6">
           <h2 className="font-display font-bold uppercase text-lg tracking-wide text-night-pitch dark:text-floodlight mb-3">
             League Table

@@ -9,7 +9,7 @@ from auth_utils import role_required
 
 
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
     log = logging.getLogger(__name__)

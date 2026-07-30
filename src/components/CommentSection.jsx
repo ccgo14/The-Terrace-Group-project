@@ -5,7 +5,7 @@ import { mapComment } from "../api/mappers";
 import { useAuth } from "../context/AuthContext";
 
 export default function CommentSection({ articleId, initialUpvotes = 0, onUpvoteUpdate }) {
-  const [reactionsList, setReactionsList] = useState([]);
+  const [commentsList, setCommentsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newCommentText, setNewCommentText] = useState("");
   const [upvotes, setUpvotes] = useState(initialUpvotes);
@@ -25,18 +25,18 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
     let cancelled = false;
     setLoading(true);
     api
-      .get(`/articles/${articleId}/reactions`)
+      .get(`/articles/${articleId}/comments`)
       .then((res) => {
         if (!cancelled) {
           const items = Array.isArray(res.data) ? res.data.map(mapComment) : [];
-          setReactionsList(items);
+          setCommentsList(items);
           setLoading(false);
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          console.error("Failed to fetch reactions:", err);
-          setReactionsList([]);
+          console.error("Failed to fetch comments:", err);
+          setCommentsList([]);
           setLoading(false);
         }
       });
@@ -72,31 +72,28 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
       id: tempId,
       article_id: articleId,
       user_id: user?.id || user?.user_id,
-      reaction_type: "comment",
       body: newCommentText,
       created_at: new Date().toISOString(),
     };
 
-    setReactionsList((prev) => [...prev, optimisticComment]);
+    setCommentsList((prev) => [...prev, optimisticComment]);
     const commentText = newCommentText;
     setNewCommentText("");
 
     api
-      .post("/reactions", {
-        article_id: Number(articleId),
-        body: commentText,
-        reaction_type: "comment",
+      .post(`/articles/${articleId}/comments`, {
+        content: commentText,
       })
       .then((res) => {
-        setReactionsList((prev) =>
+        setCommentsList((prev) =>
           prev.map((c) =>
-            c.id === tempId ? { ...mapComment(res.data), id: res.data.reaction_id || res.data.id } : c
+            c.id === tempId ? { ...mapComment(res.data), id: res.data.id } : c
           )
         );
       })
       .catch((err) => {
-        console.error("Failed to post reaction:", err);
-        setReactionsList((prev) => prev.filter((c) => c.id !== tempId));
+        console.error("Failed to post comment:", err);
+        setCommentsList((prev) => prev.filter((c) => c.id !== tempId));
       })
       .finally(() => {
         setSubmitting(false);
@@ -127,11 +124,11 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
           </div>
         ) : (
           <div className="space-y-3">
-            {reactionsList.map(function (reaction) {
-              const author = resolveUser(reaction.user_id);
+            {commentsList.map(function (comment) {
+              const author = resolveUser(comment.user_id);
               return (
                 <div
-                  key={reaction.id}
+                  key={comment.id}
                   className="flex gap-3 items-start bg-white/80 dark:bg-terracing/40 p-3 rounded-card border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-100">
                   <img
                     src={author?.avatar || users?.[0]?.avatar || "/images/default-avatar.png"}
@@ -145,15 +142,15 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
                           {author?.name || "Anonymous"}
                         </span>
                         <span className="font-mono text-[11px] text-terracing/60 dark:text-floodlight/50">
-                          {reaction.time || "5 Minutes Ago"}
+                          {comment.time || "5 Minutes Ago"}
                         </span>
                       </div>
                       <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/70 dark:text-floodlight/50 border border-black/10 dark:border-white/10 px-1.5 py-0.5 rounded-card">
-                        {reaction.reaction_type || "prediction"}
+                        {comment.reaction_type || "comment"}
                       </span>
                     </div>
                     <p className="text-sm leading-relaxed text-night-pitch dark:text-floodlight/80 mt-1">
-                      {reaction.details || reaction.body}
+                      {comment.details || comment.body}
                     </p>
                   </div>
                 </div>
@@ -162,7 +159,7 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
           </div>
         )}
 
-        {/* Upvote / Downvote actions */}
+        {/* Upvote / Downvote Actions */}
         <div className="flex gap-4 items-center pt-2 text-xs text-terracing/60 dark:text-floodlight/50">
           <button
             onClick={handleUpvote}
@@ -203,14 +200,15 @@ export default function CommentSection({ articleId, initialUpvotes = 0, onUpvote
         </div>
       </div>
 
+      {/* New Comment Input Form */}
       <form
         onSubmit={onAddComment}
         className="sticky bottom-0 bg-floodlight/95 dark:bg-night-pitch/95 border-t border-black/10 dark:border-white/10 p-3 flex gap-2 items-center">
-          <img
-            src={users?.[0]?.avatar || "/images/default-avatar.png"}
-            alt="You"
-            className="w-8 h-8 rounded-full border border-black/10 dark:border-white/10 flex-shrink-0"
-          />
+        <img
+          src={users?.[0]?.avatar || "/images/default-avatar.png"}
+          alt="You"
+          className="w-8 h-8 rounded-full border border-black/10 dark:border-white/10 flex-shrink-0"
+        />
         <input
           type="text"
           placeholder="Type Something..."

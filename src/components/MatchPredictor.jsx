@@ -71,8 +71,6 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         match_id: matchId,
         predicted_home_score: Number(homeScore),
         predicted_away_score: Number(awayScore),
-        reaction_type: reactionType,
-        body,
       });
 
       // Clear form inputs on successful submission
