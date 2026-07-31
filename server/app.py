@@ -5,9 +5,10 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, g
 from flask_restful import Api
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import structlog
 import sys
-import os
 
 from server.extensions import db, bcrypt, jwt, migrate, cors
 
@@ -39,11 +40,20 @@ def configure_logging():
 def create_app():
     app = Flask(__name__)
 
-    # APPLICATION CONFIGURATION
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
-    
     basedir = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(basedir, ".env"))
+
+    # APPLICATION CONFIGURATION & STRICT SECURITY KEYS
+    secret_key = os.getenv("SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError("CRITICAL: 'SECRET_KEY' environment variable is missing!")
+    app.config["SECRET_KEY"] = secret_key
+
+    jwt_secret_key = os.getenv("JWT_SECRET_KEY")
+    if not jwt_secret_key:
+        raise RuntimeError("CRITICAL: 'JWT_SECRET_KEY' environment variable is missing!")
+    app.config["JWT_SECRET_KEY"] = jwt_secret_key
+
     instance_dir = os.path.join(basedir, "instance")
     
     # Programmatically ensure the instance directory exists to avoid operational errors
@@ -75,9 +85,6 @@ def create_app():
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Security & JWT Expiry
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-jwt-key")
-    
     access_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_MINUTES", 60))
     refresh_days = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", 30))
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=access_minutes)
@@ -90,6 +97,14 @@ def create_app():
     app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
     app.config["JWT_REFRESH_COOKIE_PATH"] = "/auth/refresh"
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+
+    # INITIALIZE RATE LIMITER
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
 
     # INITIALIZE LOGGING & MIDDLEWARE
     configure_logging()
@@ -134,8 +149,28 @@ def create_app():
         if exception:
             logger.error("Unhandled exception during request lifecycle", error=str(exception), exc_info=True)
 
-    # INITIALIZE CORS
-    frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    # GLOBAL ERROR HANDLERS
+    @app.errorhandler(400)
+    def bad_request(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Bad request"}), 400
+
+    @app.errorhandler(401)
+    def unauthorized(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Unauthorized"}), 401
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Not found"}), 404
+
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify({"error": "ratelimit_exceeded", "message": "Too many requests, please try again later."}), 429
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return jsonify({"error": "Internal server error"}), 500
+
+    # INITIALIZE CORS GLOBALLY
     cors.init_app(
         app,
         supports_credentials=True,
@@ -150,11 +185,18 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
 
+    # TOKEN BLOCKLIST LOADER
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from server.models import TokenBlocklist
+        jti = jwt_payload.get("jti")
+        token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+        return token is not None
+
     # REGISTER CUSTOM JWT ERROR HANDLERS
     @jwt.unauthorized_loader
     def missing_token_callback(error):
         return jsonify({
-            "status": 401,
             "error": "unauthorized",
             "message": "Request is missing a valid authorization token."
         }), 401
@@ -162,7 +204,6 @@ def create_app():
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         return jsonify({
-            "status": 401,
             "error": "token_expired",
             "message": "The token has expired. Please refresh your token."
         }), 401
@@ -170,7 +211,6 @@ def create_app():
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return jsonify({
-            "status": 422,
             "error": "invalid_token",
             "message": "Signature verification failed or token is malformed."
         }), 422
@@ -178,7 +218,6 @@ def create_app():
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
         return jsonify({
-            "status": 401,
             "error": "token_revoked",
             "message": "This token has been revoked. Please log in again."
         }), 401
@@ -273,4 +312,5 @@ def register_routes(api):
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(port=5555, debug=True)
+    is_dev = os.getenv("FLASK_ENV") == "development"
+    app.run(port=5555, debug=is_dev)
