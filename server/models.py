@@ -6,6 +6,14 @@ from server.extensions import db
 bcrypt = Bcrypt()
 
 
+class TokenBlocklist(db.Model):
+    __tablename__ = "token_blocklist"
+
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
 class User(db.Model):
     __tablename__ = "users"
 
@@ -70,6 +78,10 @@ class Profile(db.Model):
 
     user = db.relationship("User", back_populates="profile")
 
+    __table_args__ = (
+        db.Index("idx_profile_user_id", "user_id"),
+    )
+
 
 class Article(db.Model):
     __tablename__ = "articles"
@@ -99,6 +111,11 @@ class Article(db.Model):
         "Comment", back_populates="article", cascade="all, delete-orphan"
     )
 
+    __table_args__ = (
+        db.Index("idx_articles_author_id", "author_id"),
+        db.Index("idx_articles_category_id", "category_id"),
+    )
+
 
 class Comment(db.Model):
     __tablename__ = "comments"
@@ -116,6 +133,11 @@ class Comment(db.Model):
 
     user = db.relationship("User", back_populates="comments")
     article = db.relationship("Article", back_populates="comments")
+
+    __table_args__ = (
+        db.Index("idx_comments_user_id", "user_id"),
+        db.Index("idx_comments_article_id", "article_id"),
+    )
 
 
 class Category(db.Model):
@@ -141,6 +163,7 @@ class Reaction(db.Model):
     reaction_id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(1000), nullable=False)
     reaction_type = db.Column(db.String(30), nullable=False)
+    upvotes = db.Column(db.Integer, default=0, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     article_id = db.Column(
         db.Integer, db.ForeignKey("articles.article_id"), nullable=False
@@ -150,6 +173,11 @@ class Reaction(db.Model):
     user = db.relationship("User", back_populates="reactions")
     article = db.relationship("Article", back_populates="reactions")
 
+    __table_args__ = (
+        db.Index("idx_reactions_user_id", "user_id"),
+        db.Index("idx_reactions_article_id", "article_id"),
+    )
+
 
 class Follow(db.Model):
     __tablename__ = "follows"
@@ -157,6 +185,11 @@ class Follow(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
     category_id = db.Column(
         db.Integer, db.ForeignKey("categories.category_id"), primary_key=True
+    )
+
+    __table_args__ = (
+        db.Index("idx_follows_user_id", "user_id"),
+        db.Index("idx_follows_category_id", "category_id"),
     )
 
 
@@ -193,6 +226,10 @@ class Team(db.Model):
         "Match", foreign_keys="Match.away_team_id", back_populates="away_team"
     )
 
+    __table_args__ = (
+        db.Index("idx_teams_league_id", "league_id"),
+    )
+
 
 class Match(db.Model):
     __tablename__ = "matches"
@@ -222,6 +259,12 @@ class Match(db.Model):
         "Prediction", back_populates="match", cascade="all, delete-orphan"
     )
 
+    __table_args__ = (
+        db.Index("idx_matches_league_id", "league_id"),
+        db.Index("idx_matches_home_team_id", "home_team_id"),
+        db.Index("idx_matches_away_team_id", "away_team_id"),
+    )
+
 
 class Prediction(db.Model):
     __tablename__ = "predictions"
@@ -240,3 +283,8 @@ class Prediction(db.Model):
 
     user = db.relationship("User", back_populates="predictions")
     match = db.relationship("Match", back_populates="predictions")
+
+    __table_args__ = (
+        db.Index("idx_predictions_user_id", "user_id"),
+        db.Index("idx_predictions_match_id", "match_id"),
+    )
