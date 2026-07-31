@@ -2,12 +2,17 @@ from flask import make_response, request
 from flask_restful import Resource
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from models import db, League
-from schemas import league_schema, leagues_schema
-from auth_utils import role_required
+try:
+    from server.models import db, League
+    from server.schemas import league_schema, leagues_schema
+    from server.auth_utils import role_required
+except ImportError:
+    from models import db, League
+    from schemas import league_schema, leagues_schema
+    from auth_utils import role_required
 
 try:
-    from extensions import log
+    from server.extensions import log
 except ImportError:
     import logging
     log = logging.getLogger(__name__)

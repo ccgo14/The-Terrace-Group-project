@@ -71,8 +71,6 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         match_id: matchId,
         predicted_home_score: Number(homeScore),
         predicted_away_score: Number(awayScore),
-        reaction_type: reactionType,
-        body,
       });
 
       // Clear form inputs on successful submission
@@ -95,7 +93,7 @@ export default function MatchPredictor({ articleId: _articleId, matchId }) {
         <h3 className="font-display font-bold uppercase text-sm tracking-wide text-night-pitch dark:text-floodlight">
           Submit Prediction
         </h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-amber-live border border-amber-live/30 px-2 py-1 rounded-card">
+        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-terracing/70 dark:text-floodlight/50 border border-black/10 dark:border-white/10 px-2 py-1 rounded-card">
           {communityPercentage}% consensus
         </span>
       </div>

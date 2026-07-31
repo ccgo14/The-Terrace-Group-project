@@ -5,11 +5,12 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, g
 from flask_restful import Api
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import structlog
-from extensions import db, bcrypt, jwt, migrate, cors
+import sys
 
-# Load environment variables from server/.env
-load_dotenv()
+from server.extensions import db, bcrypt, jwt, migrate, cors
 
 
 def configure_logging():
@@ -39,10 +40,20 @@ def configure_logging():
 def create_app():
     app = Flask(__name__)
 
-    # APPLICATION CONFIGURATION
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-flask-secret-key")
-    
     basedir = os.path.abspath(os.path.dirname(__file__))
+    load_dotenv(os.path.join(basedir, ".env"))
+
+    # APPLICATION CONFIGURATION & STRICT SECURITY KEYS
+    secret_key = os.getenv("SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError("CRITICAL: 'SECRET_KEY' environment variable is missing!")
+    app.config["SECRET_KEY"] = secret_key
+
+    jwt_secret_key = os.getenv("JWT_SECRET_KEY")
+    if not jwt_secret_key:
+        raise RuntimeError("CRITICAL: 'JWT_SECRET_KEY' environment variable is missing!")
+    app.config["JWT_SECRET_KEY"] = jwt_secret_key
+
     instance_dir = os.path.join(basedir, "instance")
     
     # Programmatically ensure the instance directory exists to avoid operational errors
@@ -74,21 +85,26 @@ def create_app():
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Security & JWT Expiry
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-jwt-key")
-    
     access_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_MINUTES", 60))
     refresh_days = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", 30))
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=access_minutes)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=refresh_days)
 
-    # JWT Cookie Setup
-    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    # JWT Setup - Support both Bearer headers (localStorage) and cookies
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
     app.config["JWT_COOKIE_CSRF_PROTECT"] = True
     app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
     app.config["JWT_REFRESH_COOKIE_PATH"] = "/auth/refresh"
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+
+    # INITIALIZE RATE LIMITER
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
 
     # INITIALIZE LOGGING & MIDDLEWARE
     configure_logging()
@@ -133,12 +149,32 @@ def create_app():
         if exception:
             logger.error("Unhandled exception during request lifecycle", error=str(exception), exc_info=True)
 
-    # INITIALIZE CORS
-    frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    # GLOBAL ERROR HANDLERS
+    @app.errorhandler(400)
+    def bad_request(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Bad request"}), 400
+
+    @app.errorhandler(401)
+    def unauthorized(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Unauthorized"}), 401
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error": str(e.description) if hasattr(e, 'description') else "Not found"}), 404
+
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify({"error": "ratelimit_exceeded", "message": "Too many requests, please try again later."}), 429
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return jsonify({"error": "Internal server error"}), 500
+
+    # INITIALIZE CORS GLOBALLY
     cors.init_app(
         app,
         supports_credentials=True,
-        origins=[frontend_origin, "http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+        origins=["http://localhost:5173", "http://127.0.0.1:5173"],
         allow_headers=["Content-Type", "Authorization", "X-CSRF-TOKEN"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
@@ -149,11 +185,18 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
 
+    # TOKEN BLOCKLIST LOADER
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from server.models import TokenBlocklist
+        jti = jwt_payload.get("jti")
+        token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+        return token is not None
+
     # REGISTER CUSTOM JWT ERROR HANDLERS
     @jwt.unauthorized_loader
     def missing_token_callback(error):
         return jsonify({
-            "status": 401,
             "error": "unauthorized",
             "message": "Request is missing a valid authorization token."
         }), 401
@@ -161,7 +204,6 @@ def create_app():
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         return jsonify({
-            "status": 401,
             "error": "token_expired",
             "message": "The token has expired. Please refresh your token."
         }), 401
@@ -169,7 +211,6 @@ def create_app():
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return jsonify({
-            "status": 422,
             "error": "invalid_token",
             "message": "Signature verification failed or token is malformed."
         }), 422
@@ -177,7 +218,6 @@ def create_app():
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
         return jsonify({
-            "status": 401,
             "error": "token_revoked",
             "message": "This token has been revoked. Please log in again."
         }), 401
@@ -190,25 +230,25 @@ def create_app():
 
 
 def register_routes(api):
-    from resources.auth import (
+    from server.resources.auth import (
         RegisterResource, 
         LoginResource, 
         LogoutResource, 
         MeResource, 
         RefreshTokenResource
     )
-    from resources.users import (
+    from server.resources.users import (
         UsersResource, UserByIDResource, UserFollowResource, 
         UserFollowersResource, UserFollowingResource, UserStatsResource
     )
-    from resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
-    from resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource    
-    from resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
-    from resources.leagues import LeaguesResource, LeagueByIDResource
-    from resources.teams import TeamsResource, TeamByIDResource
-    from resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
-    from resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
-    from resources.admin import AdminReportsResource, AdminArticlePublishResource
+    from server.resources.categories import CategoriesResource, CategoryByIDResource, CategoryArticlesResource
+    from server.resources.articles import ArticlesResource, ArticleByIDResource, ArticleUpvoteResource, ArticleCommentsResource, UserArticlesResource, NewsResource   
+    from server.resources.reactions import ReactionsResource, ArticleReactionsResource, ReactionByIDResource, ReactionUpvoteResource, UserReactionsResource
+    from server.resources.leagues import LeaguesResource, LeagueByIDResource
+    from server.resources.teams import TeamsResource, TeamByIDResource
+    from server.resources.matches import MatchesResource, MatchByIDResource, MatchLiveResource, MatchEventsResource, MatchPredictionsResource
+    from server.resources.predictions import PredictionsResource, PredictionByIDResource, PredictionResolveResource, UserPredictionsResource
+    from server.resources.admin import AdminReportsResource, AdminArticlePublishResource
 
     # Auth Routes
     api.add_resource(RegisterResource, "/auth/register")
@@ -235,6 +275,7 @@ def register_routes(api):
 
     # Articles
     api.add_resource(ArticlesResource, "/articles")
+    api.add_resource(NewsResource, "/news")
     api.add_resource(ArticleByIDResource, "/articles/<int:article_id>")
     api.add_resource(ArticleUpvoteResource, "/articles/<int:article_id>/upvote")
     api.add_resource(ArticleCommentsResource, "/articles/<int:article_id>/comments")
@@ -271,4 +312,5 @@ def register_routes(api):
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(port=5555, debug=True)
+    is_dev = os.getenv("FLASK_ENV") == "development"
+    app.run(port=5555, debug=is_dev)

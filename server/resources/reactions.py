@@ -3,6 +3,7 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+import bleach
 
 try:
     from server.models import db, Reaction, User, Article
@@ -49,8 +50,11 @@ class ReactionsResource(Resource):
                     {"status": 404, "message": "Article not found"}, 404
                 )
 
+            raw_body = validated_data.get("body", "")
+            clean_body = bleach.clean(raw_body, strip=True) if raw_body else raw_body
+
             new_reaction = Reaction(
-                body=validated_data.get("body"),
+                body=clean_body,
                 reaction_type=validated_data.get("reaction_type"),
                 user_id=current_user_id,
                 article_id=validated_data.get("article_id"),
@@ -141,6 +145,8 @@ class ReactionByIDResource(Resource):
 
             for key, value in validated_data.items():
                 if hasattr(reaction, key):
+                    if key == "body" and isinstance(value, str):
+                        value = bleach.clean(value, strip=True)
                     setattr(reaction, key, value)
 
             db.session.commit()
@@ -214,7 +220,7 @@ class ReactionUpvoteResource(Resource):
             return make_response({"status": 404, "message": "Reaction not found"}, 404)
 
         try:
-            reaction.upvotes = (getattr(reaction, "upvotes", 0) or 0) + 1
+            reaction.upvotes = (reaction.upvotes or 0) + 1
             db.session.commit()
             return make_response(reaction_schema.dump(reaction), 200)
         except Exception as e:

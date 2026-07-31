@@ -5,10 +5,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        floodlight: "#f4f4f0",
-        "night-pitch": "#0d0f12",
-        terracing: "#1a1d24",
-        "amber-live": "#FFB100",
+        floodlight: "#F5F5F7",
+        "night-pitch": "#0D0E11",
+        terracing: "#2A2A2A",
+        "amber-live": "#FFBF00",
         "pitch-green": "#3C5A41",
       },
       fontFamily: {

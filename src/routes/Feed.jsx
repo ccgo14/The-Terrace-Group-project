@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Screen, Header } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import ArticleCard from "../components/ArticleCard";
 import { Scoreboard } from "../components/Scoreboard";
 import { Skeleton } from "../components/Skeleton";
-import { liveMatch } from "../data";
+import { liveMatch, categories } from "../data";
 import api from "../api/client";
 import { mapArticle } from "../api/mappers";
 
@@ -13,33 +14,65 @@ const filters = ["For You", "Match Reports", "Fan Reactions", "Following"];
 export default function Feed() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // 1. Read query parameters from the URL
+  const [searchParams] = useSearchParams();
+  const selectedCategory = searchParams.get("category"); // e.g. "La Liga" or null
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get("/articles")
-      .then((res) => {
+    setLoading(true);
+
+    const fetchArticles = async () => {
+      try {
+        let categoryId = null;
+        if (selectedCategory) {
+          try {
+            const catRes = await api.get("/categories");
+            const dbCategories = Array.isArray(catRes.data) ? catRes.data : [];
+            const found = dbCategories.find(
+              (c) => (c.category_name || c.name || "").toLowerCase() === selectedCategory.toLowerCase()
+            );
+            if (found) categoryId = found.category_id || found.id;
+          } catch {
+            const found = categories.find(
+              (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
+            );
+            if (found) categoryId = found.id;
+          }
+        }
+
+        const endpoint = categoryId
+          ? `/articles?category_id=${categoryId}`
+          : "/articles";
+
+        const res = await api.get(endpoint);
         if (!cancelled) {
-          const items = Array.isArray(res.data?.articles) ? res.data.articles : [];
+          const items = Array.isArray(res.data)
+            ? res.data
+            : (res.data?.articles || []);
           setArticles(items.map(mapArticle));
           setLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           console.error("Failed to fetch articles:", err);
           setArticles([]);
           setLoading(false);
         }
-      });
+      }
+    };
+
+    fetchArticles();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedCategory]); // 3. Re-run effect whenever the category query parameter changes
 
   return (
     <Screen sidebar nav>
-      <Header title="Your Feed" />
+      {/* Dynamically update header title if a category is selected */}
+      <Header title={selectedCategory ? selectedCategory : "Your Feed"} />
 
       {/* filter chips — hover inverts, no rounded-full pills */}
       <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-black/10 dark:border-white/10">

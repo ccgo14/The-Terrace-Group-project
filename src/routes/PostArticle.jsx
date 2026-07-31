@@ -76,7 +76,7 @@ export default function PostArticle() {
         title="New Post"
         left={
           <Link
-            to="/profile/1"
+            to="/user-profile"
             className="text-night-pitch dark:text-floodlight block"
             aria-label="Back">
             <IconArrowLeft className="w-6 h-6" />
@@ -114,6 +114,7 @@ export default function PostArticle() {
           <select
             value={form.category_id}
             onChange={(e) => update("category_id", e.target.value)}
+            required
             className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight focus:outline-none focus:border-black/50 dark:focus:border-white/50">
             <option
               value=""
@@ -161,6 +162,7 @@ export default function PostArticle() {
             placeholder="Set the scene from the terrace…"
             value={form.body}
             onChange={(e) => update("body", e.target.value)}
+            required
             className="w-full bg-transparent border border-black/10 dark:border-white/10 rounded-card px-3 py-2.5 text-sm text-night-pitch dark:text-floodlight
             placeholder:text-terracing/40 dark:placeholder:text-floodlight/40 focus:outline-none focus:border-black/50 dark:focus:border-white/50 resize-none"
           />
@@ -178,7 +180,7 @@ export default function PostArticle() {
           </Button>
           <Button
             type="submit"
-            disabled={submitting || !form.title || !form.body}>
+            disabled={submitting || !form.title || !form.body || !form.category_id}>
             Publish
           </Button>
         </div>

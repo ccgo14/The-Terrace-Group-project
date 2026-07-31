@@ -16,6 +16,7 @@ flask-jwt-extended = "*"
 flask-cors = "*"
 structlog = "*"
 rich = "*"
+requests = "*"
 
 [dev-packages]
 

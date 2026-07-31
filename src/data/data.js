@@ -15,6 +15,15 @@ export const table = [
   { rank: 5, pos: 5, team: "Tottenham", played: 38, gd: "+15", points: 66, pts: 66 },
 ];
 
+export const leagues = [
+  { id: 1, name: "English Premier League", country: "England" },
+  { id: 2, name: "La Liga", country: "Spain" },
+  { id: 3, name: "Serie A", country: "Italy" },
+  { id: 4, name: "Bundesliga", country: "Germany" },
+  { id: 5, name: "Ligue 1", country: "France" },
+  { id: 6, name: "Champions League", country: "Europe" },
+];
+
 export const liveMatch = {
   status: "LIVE",
   minute: "67'",

@@ -3,11 +3,11 @@
 
 @theme {
   /* Colors - The Locked Tokens */
-  --color-floodlight: #f4f4f0;
-  --color-night-pitch: #0d0f12;
-  --color-terracing: #1a1d24;
-  --color-amber-live: #ffb100;
-  --color-pitch-green: #3c5a41;
+  --color-floodlight: #F5F5F7;
+  --color-night-pitch: #0D0E11;
+  --color-terracing: #2A2A2A;
+  --color-amber-live: #FFBF00;
+  --color-pitch-green: #3C5A41;
 
   /* Font Families */
   --font-display: "Barlow Condensed", sans-serif;

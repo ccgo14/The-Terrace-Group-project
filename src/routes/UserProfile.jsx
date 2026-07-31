@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Screen, Header, Button, KindLabel, MetaRow } from "../components/UI";
 import BottomNav from "../components/BottomNav";
 import { IconEdit, IconCamera } from "../components/Icons";
 import { profile } from "../data";
 import api from "../api/client";
 import { mapArticle } from "../api/mappers";
+import { useAuth } from "../context/AuthContext";
 
 const normalizeUser = (raw, fallback) => {
   if (!raw) return fallback;
@@ -20,6 +21,8 @@ const normalizeUser = (raw, fallback) => {
 };
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
@@ -128,6 +131,11 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   if (loading) {
     return (
       <Screen sidebar nav>
@@ -135,7 +143,7 @@ export default function Profile() {
           title="Profile"
           right={
             <Link
-              to="/post-article"
+              to="/create-article"
               className="text-night-pitch dark:text-floodlight block"
               aria-label="Post"
             >
@@ -160,7 +168,7 @@ export default function Profile() {
         title="Profile"
         right={
           <Link
-            to="/post-article"
+             to="/create-article"
             className="text-night-pitch dark:text-floodlight block"
             aria-label="Post"
           >
@@ -262,6 +270,13 @@ export default function Profile() {
                 </button>
               </div>
             ))}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-2 w-full py-2.5 rounded-card border border-red-500/30 text-red-500 font-display font-semibold uppercase tracking-wide text-sm hover:bg-red-500/5 transition-colors duration-100"
+            >
+              Log Out
+            </button>
           </div>
         </div>
 

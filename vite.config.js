@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5555",
+        target: "https://newsapi.org/v2/everything",
         changeOrigin: true,
       },
       "/auth": {

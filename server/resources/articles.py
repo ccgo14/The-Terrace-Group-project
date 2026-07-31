@@ -3,6 +3,9 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+import bleach
+import os
+import requests
 
 try:
     from server.models import db, Article, User, Category, Comment
@@ -29,18 +32,33 @@ except ImportError:
 
 # /articles
 class ArticlesResource(Resource):
-    # GET /articles - Public: Fetch all articles (with optional query filters like category or status)
+    # GET /articles - Public: Fetch all articles with pagination and optional category filter
     def get(self):
         category_id = request.args.get("category_id")
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
         query = Article.query
 
         if category_id:
             query = query.filter_by(category_id=category_id)
 
-        articles = query.all()
-        # FIXED: Replaced keyword argument with standard f-string formatting
-        log.info(f"get_all_articles count={len(articles)}")
-        return make_response(articles_schema.dump(articles), 200)
+        # Utilize Flask-SQLAlchemy built-in pagination
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        articles = pagination.items
+
+        log.info(f"get_all_articles count={len(articles)} page={page} per_page={per_page}")
+        
+        # Return structured metadata alongside items
+        return make_response({
+            "articles": articles_schema.dump(articles),
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page,
+            "per_page": per_page,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev
+        }, 200)
 
     # POST /articles - Protected: Create a new article (Admin/Author only)
     @role_required(["admin", "author"])
@@ -63,9 +81,15 @@ class ArticlesResource(Resource):
                         {"status": 404, "message": "Category not found"}, 404
                     )
 
+            raw_title = validated_data.get("title", "")
+            raw_content = validated_data.get("content", "")
+
+            clean_title = bleach.clean(raw_title, strip=True) if raw_title else raw_title
+            clean_content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
+
             new_article = Article(
-                title=validated_data.get("title"),
-                content=validated_data.get("content"),
+                title=clean_title,
+                content=clean_content,
                 cover_image=validated_data.get("cover_image"),
                 view_count=validated_data.get("view_count", 0),
                 likes_count=validated_data.get("likes_count", 0),
@@ -140,6 +164,8 @@ class ArticleByIDResource(Resource):
 
             for key, value in validated_data.items():
                 if hasattr(article, key):
+                    if key in ["title", "content"] and isinstance(value, str):
+                        value = bleach.clean(value, strip=True)
                     setattr(article, key, value)
 
             db.session.commit()
@@ -243,9 +269,11 @@ class ArticleCommentsResource(Resource):
             data["article_id"] = article_id
 
             validated_data = comment_schema.load(data)
+            raw_content = validated_data.get("content", "")
+            clean_content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
 
             new_comment = Comment(
-                content=validated_data.get("content"),
+                content=clean_content,
                 user_id=current_user_id,
                 article_id=article_id,
             )
@@ -274,11 +302,93 @@ class ArticleCommentsResource(Resource):
 
 # /users/<int:user_id>/articles
 class UserArticlesResource(Resource):
-    # GET /users/<int:user_id>/articles - Public: Fetch all articles written by a specific user
+    # GET /users/<int:user_id>/articles - Public: Fetch all articles written by a specific user with pagination
     def get(self, user_id):
         user = User.query.filter_by(user_id=user_id).first()
         if not user:
             return make_response({"status": 404, "message": "User not found"}, 404)
 
-        articles = Article.query.filter_by(author_id=user_id).all()
-        return make_response(articles_schema.dump(articles), 200)
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        pagination = Article.query.filter_by(author_id=user_id).paginate(page=page, per_page=per_page, error_out=False)
+        articles = pagination.items
+
+        return make_response({
+            "articles": articles_schema.dump(articles),
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page
+        }, 200)
+
+
+# /news
+class NewsResource(Resource):
+    def get(self):
+        try:
+            query = request.args.get("q", "football")
+            page = request.args.get("page", 1, type=int)
+            per_page = request.args.get("per_page", 10, type=int)
+            
+            # Map category names to reliable search terms or fallback lists
+            query_mapping = {
+                "la liga": "La Liga OR Real Madrid OR Barcelona",
+                "serie a": "Serie A OR Juventus OR AC Milan OR Inter Milan",
+                "bundesliga": "Bundesliga OR Bayern Munich OR Dortmund",
+                "ligue 1": "Ligue 1 OR PSG",
+                "champions league": "Champions League OR UEFA",
+                "english premier league": "Premier League OR Arsenal OR Chelsea OR Manchester United OR Liverpool"
+            }
+            
+            # Apply mapping if it matches a known category (case-insensitive)
+            search_term = query_mapping.get(query.lower(), query)
+
+            params = {
+                "q": search_term,
+                "language": "en",
+                "sortBy": "publishedAt",
+                "page": page,
+                "pageSize": per_page
+            }
+
+            api_key = os.getenv("NEWS_API_KEY")
+            if not api_key:
+                return make_response({
+                    "articles": [],
+                    "total": 0,
+                    "current_page": page,
+                    "per_page": per_page,
+                    "error": "News API key is not configured"
+                }, 500)
+
+            response = requests.get(
+                "https://newsapi.org/v2/everything",
+                params=params,
+                headers={"X-Api-Key": api_key},
+                timeout=10,
+            )
+
+            data = response.json()
+
+            # Never proxy 401/403 upstream to the frontend, because the
+            # global auth interceptor treats ANY 401 as "not authenticated"
+            # and redirects the user to /login.
+            status = 200 if response.status_code < 400 else 500
+
+            return make_response({
+                "articles": data.get("articles", []) if status == 200 else [],
+                "total": data.get("totalResults", 0) if status == 200 else 0,
+                "current_page": page,
+                "per_page": per_page,
+                **({"error": "Upstream news provider rejected the request"} if status == 500 else {})
+            }, status)
+
+        except requests.RequestException as e:
+            return make_response(
+                {
+                    "status": 500,
+                    "message": "Failed to fetch news",
+                    "error": str(e),
+                },
+                500,
+            )
