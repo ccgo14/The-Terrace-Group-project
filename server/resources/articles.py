@@ -3,11 +3,9 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+import bleach
 import os
 import requests
-
-from flask import make_response, request
-from flask_restful import Resource
 
 try:
     from server.models import db, Article, User, Category, Comment
@@ -83,9 +81,15 @@ class ArticlesResource(Resource):
                         {"status": 404, "message": "Category not found"}, 404
                     )
 
+            raw_title = validated_data.get("title", "")
+            raw_content = validated_data.get("content", "")
+
+            clean_title = bleach.clean(raw_title, strip=True) if raw_title else raw_title
+            clean_content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
+
             new_article = Article(
-                title=validated_data.get("title"),
-                content=validated_data.get("content"),
+                title=clean_title,
+                content=clean_content,
                 cover_image=validated_data.get("cover_image"),
                 view_count=validated_data.get("view_count", 0),
                 likes_count=validated_data.get("likes_count", 0),
@@ -160,6 +164,8 @@ class ArticleByIDResource(Resource):
 
             for key, value in validated_data.items():
                 if hasattr(article, key):
+                    if key in ["title", "content"] and isinstance(value, str):
+                        value = bleach.clean(value, strip=True)
                     setattr(article, key, value)
 
             db.session.commit()
@@ -263,9 +269,11 @@ class ArticleCommentsResource(Resource):
             data["article_id"] = article_id
 
             validated_data = comment_schema.load(data)
+            raw_content = validated_data.get("content", "")
+            clean_content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
 
             new_comment = Comment(
-                content=validated_data.get("content"),
+                content=clean_content,
                 user_id=current_user_id,
                 article_id=article_id,
             )

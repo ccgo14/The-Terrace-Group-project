@@ -3,6 +3,8 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+import bleach
+
 try:
     from server.models import db, Comment, Article, User
     from server.schemas import comment_schema, comments_schema
@@ -46,9 +48,12 @@ class CommentsResource(Resource):
             if not article:
                 return make_response({"status": 404, "message": "Article not found"}, 404)
 
+            raw_content = validated_data.get("content", "")
+            clean_content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
+
             # Create new comment
             new_comment = Comment(
-                content=validated_data["content"],
+                content=clean_content,
                 article_id=validated_data["article_id"],
                 user_id=current_user_id,
             )
@@ -108,7 +113,8 @@ class CommentByIDResource(Resource):
 
             # Update content
             if "content" in validated_data:
-                comment.content = validated_data["content"]
+                raw_content = validated_data["content"]
+                comment.content = bleach.clean(raw_content, strip=True) if raw_content else raw_content
 
             db.session.commit()
             return make_response(comment_schema.dump(comment), 200)

@@ -11,10 +11,10 @@ from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
 try:
-    from server.models import db, User, Profile
+    from server.models import db, User, Profile, TokenBlocklist
     from server.schemas import user_schema, login_schema, register_schema
 except ImportError:
-    from models import db, User, Profile
+    from models import db, User, Profile, TokenBlocklist
     from schemas import user_schema, login_schema, register_schema
 
 
@@ -134,9 +134,18 @@ class LoginResource(Resource):
 
 
 class LogoutResource(Resource):
+    @jwt_required(verify_type=False)
     def post(self):
-        """Logs out the user."""
-        return make_response({"message": "Successfully logged out"}, 200)
+        """Logs out the user by adding the token JTI to the blocklist."""
+        try:
+            token = get_jwt()
+            jti = token["jti"]
+            db.session.add(TokenBlocklist(jti=jti))
+            db.session.commit()
+            return make_response({"message": "Successfully logged out"}, 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response({"status": 500, "message": "An error occurred during logout"}, 500)
 
 
 class RefreshTokenResource(Resource):
